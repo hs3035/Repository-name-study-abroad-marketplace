@@ -2,12 +2,14 @@ import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
 import { getSessionSecret } from './env'
 
-const encodedKey = new TextEncoder().encode(getSessionSecret())
-
 export type SessionPayload = {
   userId: string
   name: string
   role: 'adviser' | 'applicant'
+}
+
+function getEncodedKey(): Uint8Array {
+  return new TextEncoder().encode(getSessionSecret())
 }
 
 export async function encrypt(payload: SessionPayload, maxAgeDays = 7): Promise<string> {
@@ -15,13 +17,13 @@ export async function encrypt(payload: SessionPayload, maxAgeDays = 7): Promise<
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime(`${maxAgeDays}d`)
-    .sign(encodedKey)
+    .sign(getEncodedKey())
 }
 
 export async function decrypt(token: string | undefined): Promise<SessionPayload | null> {
   if (!token) return null
   try {
-    const { payload } = await jwtVerify(token, encodedKey, { algorithms: ['HS256'] })
+    const { payload } = await jwtVerify(token, getEncodedKey(), { algorithms: ['HS256'] })
     return payload as unknown as SessionPayload
   } catch {
     return null
