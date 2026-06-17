@@ -104,8 +104,9 @@ export async function sendVerificationEmail(email: string): Promise<OtpResult> {
   const code = generateOtp(email)
   try {
     await sendOtpEmail(email, code)
-  } catch {
-    return { error: '邮件服务暂未配置，请联系平台管理员' }
+  } catch (error) {
+    console.error('[auth/sendVerificationEmail] Failed to send OTP email:', error)
+    return { error: '邮件发送失败，请联系平台管理员检查邮箱配置' }
   }
   return {
     sent: true,
@@ -121,8 +122,9 @@ export async function sendApplicantEmailVerification(email: string): Promise<Otp
   const code = generateOtp(email)
   try {
     await sendOtpEmail(email, code)
-  } catch {
-    return { error: '邮件服务暂未配置，请联系平台管理员' }
+  } catch (error) {
+    console.error('[auth/sendApplicantEmailVerification] Failed to send OTP email:', error)
+    return { error: '邮件发送失败，请联系平台管理员检查邮箱配置' }
   }
   return {
     sent: true,

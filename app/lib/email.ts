@@ -50,6 +50,12 @@ export async function sendOtpEmail(to: string, code: string): Promise<void> {
   }
 
   const from = process.env.SMTP_FROM ?? process.env.SMTP_USER
+  console.log('[email] Sending OTP email', {
+    to,
+    host: process.env.SMTP_HOST ?? 'smtp.gmail.com',
+    port: process.env.SMTP_PORT ?? '587',
+    from,
+  })
   await withTimeout(
     transporter.sendMail({
       from: `"留学导师平台" <${from}>`,
