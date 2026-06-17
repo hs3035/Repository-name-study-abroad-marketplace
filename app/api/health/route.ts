@@ -9,7 +9,11 @@ function configured(name: string): boolean {
   const value = process.env[name]
   if (!value) return false
   const lower = value.toLowerCase()
-  return !lower.includes('replace_') && !lower.includes('your-') && !lower.includes('...')
+  return !lower.includes('replace_')
+    && !lower.includes('your-')
+    && !lower.includes('...')
+    && !lower.includes('you@gmail.com')
+    && !lower.includes('your_gmail_app_password')
 }
 
 async function checkWritableDataDir(): Promise<boolean> {

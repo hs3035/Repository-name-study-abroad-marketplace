@@ -15,7 +15,19 @@ function createTransporter() {
     port,
     secure: port === 465,
     auth: { user, pass },
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 15_000,
   })
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => {
+      setTimeout(() => reject(new Error(message)), ms)
+    }),
+  ])
 }
 
 // ── Email ─────────────────────────────────────────────────────────────────────
@@ -38,21 +50,25 @@ export async function sendOtpEmail(to: string, code: string): Promise<void> {
   }
 
   const from = process.env.SMTP_FROM ?? process.env.SMTP_USER
-  await transporter.sendMail({
-    from: `"留学导师平台" <${from}>`,
-    to,
-    subject: '【留学导师平台】邮箱验证码',
-    html: `
-      <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px">
-        <h2 style="margin-bottom:8px">邮箱验证码</h2>
-        <p style="color:#555;margin-bottom:24px">请在注册页面填入以下验证码，有效期 10 分钟。</p>
-        <div style="background:#f4f4f5;border-radius:12px;padding:24px;text-align:center">
-          <span style="font-size:36px;font-weight:700;letter-spacing:8px;color:#111">${code}</span>
+  await withTimeout(
+    transporter.sendMail({
+      from: `"留学导师平台" <${from}>`,
+      to,
+      subject: '【留学导师平台】邮箱验证码',
+      html: `
+        <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px">
+          <h2 style="margin-bottom:8px">邮箱验证码</h2>
+          <p style="color:#555;margin-bottom:24px">请在注册页面填入以下验证码，有效期 10 分钟。</p>
+          <div style="background:#f4f4f5;border-radius:12px;padding:24px;text-align:center">
+            <span style="font-size:36px;font-weight:700;letter-spacing:8px;color:#111">${code}</span>
+          </div>
+          <p style="color:#999;font-size:12px;margin-top:24px">请勿将验证码告知他人。</p>
         </div>
-        <p style="color:#999;font-size:12px;margin-top:24px">请勿将验证码告知他人。</p>
-      </div>
-    `,
-  })
+      `,
+    }),
+    15_000,
+    'SMTP send timeout',
+  )
 }
 
 // ── SMS (stub) ────────────────────────────────────────────────────────────────
