@@ -4,6 +4,7 @@ import { getSlotById } from '@/app/lib/slots'
 import { getAdviserById } from '@/app/lib/advisers'
 import { getLocale } from '@/app/lib/locale'
 import { calcFees } from '@/app/lib/stripe'
+import { getCheckoutPaymentMethods } from '@/app/lib/payment-methods'
 import CheckoutClient from './CheckoutClient'
 import Link from 'next/link'
 
@@ -45,6 +46,7 @@ export default async function CheckoutPage({ searchParams }: Props) {
       adviserSchool={adviser.school}
       adviserTimezone={adviser.timezone}
       stripeReady={!!adviser.stripeAccountId}
+      paymentMethods={getCheckoutPaymentMethods()}
       locale={locale}
     />
   )

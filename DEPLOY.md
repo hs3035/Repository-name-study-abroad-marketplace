@@ -53,6 +53,7 @@ SESSION_SECRET=<256-char hex — generate below>
 STRIPE_SECRET_KEY=sk_live_...
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
 STRIPE_WEBHOOK_SECRET=whsec_...
+STRIPE_PAYMENT_METHODS=card
 RESEND_API_KEY=re_...
 EMAIL_FROM=noreply@YOUR-DOMAIN.com
 SMTP_HOST=smtp.gmail.com
@@ -96,6 +97,17 @@ Railway redeploys automatically on every `git push`.
 - Ensure your Stripe account has **Connect** enabled (Platform settings)
 - Advisers will go through Express onboarding when they click "Connect Stripe"
 - Commission: 15% platform fee is hardcoded in `app/lib/stripe.ts` (`PLATFORM_RATE`)
+
+### Enable Alipay / WeChat Pay
+1. Stripe Dashboard → Settings → Payment methods
+2. Enable **Alipay** and **WeChat Pay** for Checkout, if Stripe allows them for
+   your account/country.
+3. Railway → Variables → set:
+   ```env
+   STRIPE_PAYMENT_METHODS=card,alipay,wechat_pay
+   ```
+4. Redeploy Railway. If Stripe rejects either method, temporarily set it back to
+   `STRIPE_PAYMENT_METHODS=card` until the payment method is fully approved.
 
 ---
 

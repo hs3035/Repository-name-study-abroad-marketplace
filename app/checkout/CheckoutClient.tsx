@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import type { Locale } from '@/app/lib/i18n'
 
+type PaymentMethod = 'card' | 'alipay' | 'wechat_pay'
+
 type Props = {
   slotId: string
   utcStart: string
@@ -16,6 +18,7 @@ type Props = {
   adviserSchool: string
   adviserTimezone: string
   stripeReady: boolean
+  paymentMethods: PaymentMethod[]
   locale: Locale
 }
 
@@ -29,12 +32,34 @@ function formatLocalTime(utcStart: string, tz: string): { date: string; time: st
 }
 
 const PAYMENT_METHODS = [
-  { icon: '💳', label: { zh: '信用卡 / 借记卡', en: 'Credit / Debit Card' }, sub: { zh: 'Visa, Mastercard, Amex', en: 'Visa, Mastercard, Amex' } },
-]
+  {
+    key: 'card',
+    icon: '💳',
+    label: { zh: '信用卡 / 借记卡', en: 'Credit / Debit Card' },
+    sub: { zh: 'Visa, Mastercard, Amex', en: 'Visa, Mastercard, Amex' },
+  },
+  {
+    key: 'alipay',
+    icon: '支',
+    label: { zh: '支付宝', en: 'Alipay' },
+    sub: { zh: '适合中国学生使用', en: 'Popular with Chinese students' },
+  },
+  {
+    key: 'wechat_pay',
+    icon: '微',
+    label: { zh: '微信支付', en: 'WeChat Pay' },
+    sub: { zh: '可使用微信扫码或跳转支付', en: 'Pay with WeChat on web' },
+  },
+] satisfies Array<{
+  key: PaymentMethod
+  icon: string
+  label: { zh: string; en: string }
+  sub: { zh: string; en: string }
+}>
 
 export default function CheckoutClient({
   slotId, utcStart, price, amountFen, platformFeeFen, adviserPayoutFen,
-  adviserName, adviserSchool, adviserTimezone, stripeReady, locale,
+  adviserName, adviserSchool, adviserTimezone, stripeReady, paymentMethods, locale,
 }: Props) {
   const zh = locale === 'zh'
   const [studentTz, setStudentTz]   = useState<string>('UTC')
@@ -48,6 +73,7 @@ export default function CheckoutClient({
   const adviser = formatLocalTime(utcStart, adviserTimezone)
   const student = formatLocalTime(utcStart, studentTz)
   const sameZone = studentTz === adviserTimezone
+  const visiblePaymentMethods = PAYMENT_METHODS.filter(method => paymentMethods.includes(method.key))
 
   async function handlePay() {
     setError('')
@@ -127,9 +153,11 @@ export default function CheckoutClient({
             {zh ? '支持的支付方式' : 'Accepted payment methods'}
           </p>
           <div className="space-y-2">
-            {PAYMENT_METHODS.map(m => (
+            {visiblePaymentMethods.map(m => (
               <div key={m.label.en} className="flex items-center gap-3 text-sm">
-                <span className="text-lg w-6 text-center">{m.icon}</span>
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gray-100 text-sm font-semibold text-gray-700">
+                  {m.icon}
+                </span>
                 <div>
                   <p className="font-medium">{zh ? m.label.zh : m.label.en}</p>
                   <p className="text-xs text-gray-400">{zh ? m.sub.zh : m.sub.en}</p>

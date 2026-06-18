@@ -6,6 +6,7 @@ import { getAvailableSlots } from '@/app/lib/slots'
 import { createOrder } from '@/app/lib/orders'
 import { getStripe, calcFees } from '@/app/lib/stripe'
 import { getPublicUrl } from '@/app/lib/env'
+import { getCheckoutPaymentMethodOptions, getCheckoutPaymentMethods } from '@/app/lib/payment-methods'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -103,12 +104,10 @@ export async function POST(request: NextRequest) {
   console.log(`[stripe/checkout] Escrow mode — adviser: ${adviser.stripeAccountId} (transfer deferred until confirmation)`)
 
   // ── Build payment methods ─────────────────────────────────────────────────────
-  // "card" is universally available in test mode.
-  // Alipay and WeChat Pay require explicit enablement in your Stripe dashboard.
-  // Add them back once your account has them enabled:
-  //   payment_method_types: ['card', 'alipay', 'wechat_pay'],
-  //   payment_method_options: { wechat_pay: { client: 'web' } },
-  const paymentMethodTypes: Stripe.Checkout.SessionCreateParams['payment_method_types'] = ['card']
+  // Alipay and WeChat Pay must also be enabled in Stripe Dashboard.
+  const paymentMethodTypes = getCheckoutPaymentMethods()
+  const paymentMethodOptions = getCheckoutPaymentMethodOptions(paymentMethodTypes)
+  console.log('[stripe/checkout] Payment methods:', paymentMethodTypes)
 
   // ── Create Stripe Checkout Session ───────────────────────────────────────────
   let checkoutSession: Awaited<ReturnType<typeof stripe.checkout.sessions.create>>
@@ -131,6 +130,7 @@ export async function POST(request: NextRequest) {
       ],
       mode: 'payment',
       payment_intent_data: paymentIntentData,
+      ...(paymentMethodOptions ? { payment_method_options: paymentMethodOptions } : {}),
       success_url: `${baseUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url:  `${baseUrl}/payment/cancel`,
       metadata: {
