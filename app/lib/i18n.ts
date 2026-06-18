@@ -33,8 +33,9 @@ const zh = {
   home: {
     title: 'GoMentorGo\n你的留学搭子',
     subtitle: '你要走的路，他们已经成功走过。',
-    browseMentors: '浏览导师',
-    becomeMentor: '成为导师',
+    roleHint: '如果你要寻找导师，则注册为学生；如果你想为别的申请者提供指导，则注册为导师。',
+    browseMentors: '学生注册',
+    becomeMentor: '导师注册',
     myPage: '的主页',
   },
   login: {
@@ -244,8 +245,9 @@ const en: typeof zh = {
   home: {
     title: 'GoMentorGo\nYour study abroad companion',
     subtitle: 'The road you are about to take is one they have already walked successfully.',
-    browseMentors: 'Browse Mentors',
-    becomeMentor: 'Become a Mentor',
+    roleHint: 'Register as a student if you are looking for a mentor. Register as a mentor if you want to guide other applicants.',
+    browseMentors: 'Student Registration',
+    becomeMentor: 'Mentor Registration',
     myPage: "'s Page",
   },
   login: {

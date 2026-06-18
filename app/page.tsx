@@ -51,6 +51,7 @@ export default async function HomePage() {
       <div className="mx-auto max-w-5xl">
         <h1 className="mb-6 whitespace-pre-line text-4xl font-bold leading-tight">{d.home.title}</h1>
         <p className="mb-8 text-lg text-gray-600">{d.home.subtitle}</p>
+        <p className="mb-4 max-w-2xl text-sm text-gray-500">{d.home.roleHint}</p>
 
         <div className="flex gap-4">
           {session?.role === 'applicant' ? (
