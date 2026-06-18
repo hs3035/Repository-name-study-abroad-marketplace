@@ -66,7 +66,7 @@ async function sendWithResend(payload: EmailPayload): Promise<void> {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: `"留学导师平台" <${from}>`,
+        from: `"GoMentorGo" <${from}>`,
         to: payload.to,
         subject: payload.subject,
         html: payload.html,
@@ -95,7 +95,7 @@ async function sendWithSmtp(payload: EmailPayload): Promise<void> {
   })
   await withTimeout(
     transporter.sendMail({
-      from: `"留学导师平台" <${from}>`,
+      from: `"GoMentorGo" <${from}>`,
       ...payload,
     }),
     15_000,
@@ -108,7 +108,7 @@ async function sendWithSmtp(payload: EmailPayload): Promise<void> {
 export async function sendOtpEmail(to: string, code: string): Promise<void> {
   const payload = {
     to,
-    subject: '【留学导师平台】邮箱验证码',
+    subject: '【GoMentorGo】邮箱验证码',
     html: getEmailHtml(code),
   }
 
@@ -153,7 +153,7 @@ export async function sendOtpSms(phone: string, code: string): Promise<void> {
   // import twilio from 'twilio'
   // const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN)
   // await client.messages.create({
-  //   body: `【留学导师平台】验证码：${code}，10分钟内有效，请勿泄露。`,
+  //   body: `【GoMentorGo】验证码：${code}，10分钟内有效，请勿泄露。`,
   //   from: process.env.TWILIO_PHONE,
   //   to: `+86${phone}`,
   // })

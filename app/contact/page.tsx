@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { getSupportEmail } from '@/app/lib/env'
 
-export const metadata = { title: '联系我们 | 留学导师平台' }
+export const metadata = { title: '联系我们 | GoMentorGo' }
 
 export default function ContactPage() {
   const supportEmail = getSupportEmail()

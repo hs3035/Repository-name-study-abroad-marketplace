@@ -15,7 +15,7 @@ export const COUNTRY_OPTIONS = [
 
 const zh = {
   common: {
-    platformName: '留学导师平台',
+    platformName: 'GoMentorGo',
     login: '登录',
     register: '注册',
     logout: '退出',
@@ -31,8 +31,8 @@ const zh = {
     delete: '删除',
   },
   home: {
-    title: '找美国博士 / 博后帮你申请留学',
-    subtitle: '浏览真实在读博士和博后，获取申请建议、文书修改和选校指导。',
+    title: 'GoMentorGo\n你的留学搭子',
+    subtitle: '你要走的路，他们已经成功走过。',
     browseMentors: '浏览导师',
     becomeMentor: '成为导师',
     myPage: '的主页',
@@ -86,7 +86,7 @@ const zh = {
     resendCode: '重新发送',
     sending: '发送中…',
     codeSent: '验证码已发送，请查收邮件（有效期 10 分钟）',
-    emailSpamHint: '没收到？请检查垃圾邮件、促销/更新分类，或在邮箱里搜索“留学导师平台”“验证码”。',
+    emailSpamHint: '没收到？请检查垃圾邮件、促销/更新分类，或在邮箱里搜索“GoMentorGo”“验证码”。',
     diplomaNote: '非 .edu 邮箱需上传博士毕业证进行身份验证',
     uploadPh: '点击上传 PDF / JPG / PNG（最大 10MB）',
     pendingNote: '账号将在审核通过后（1–3 个工作日）正式激活',
@@ -119,7 +119,7 @@ const zh = {
     resendEmailCode: '重新发送',
     emailSending: '发送中…',
     emailSent: '验证码已发送至你的邮箱（有效期 10 分钟）',
-    emailSpamHint: '没收到？请检查垃圾邮件、促销/更新分类，或在邮箱里搜索“留学导师平台”“验证码”。',
+    emailSpamHint: '没收到？请检查垃圾邮件、促销/更新分类，或在邮箱里搜索“GoMentorGo”“验证码”。',
     registerBtn: '注册',
     registering: '注册中…',
   },
@@ -226,7 +226,7 @@ const zh = {
 
 const en: typeof zh = {
   common: {
-    platformName: 'Study Abroad Mentors',
+    platformName: 'GoMentorGo',
     login: 'Login',
     register: 'Register',
     logout: 'Logout',
@@ -242,8 +242,8 @@ const en: typeof zh = {
     delete: 'Remove',
   },
   home: {
-    title: 'Find PhD Students & Postdocs to Help You Study Abroad',
-    subtitle: 'Browse real PhD students and postdocs. Get application advice, essay editing, and school selection guidance.',
+    title: 'GoMentorGo\nYour study abroad companion',
+    subtitle: 'The road you are about to take is one they have already walked successfully.',
     browseMentors: 'Browse Mentors',
     becomeMentor: 'Become a Mentor',
     myPage: "'s Page",
@@ -297,7 +297,7 @@ const en: typeof zh = {
     resendCode: 'Resend',
     sending: 'Sending…',
     codeSent: 'Code sent! Check your email (valid for 10 minutes)',
-    emailSpamHint: "Didn't receive it? Check Spam/Junk, Promotions/Updates, or search your inbox for “Mentorly” or “verification code”.",
+    emailSpamHint: "Didn't receive it? Check Spam/Junk, Promotions/Updates, or search your inbox for “GoMentorGo” or “verification code”.",
     diplomaNote: 'Non-.edu email requires uploading your PhD diploma for verification',
     uploadPh: 'Click to upload PDF / JPG / PNG (max 10MB)',
     pendingNote: 'Your account will be activated after review (1–3 business days)',
@@ -330,7 +330,7 @@ const en: typeof zh = {
     resendEmailCode: 'Resend',
     emailSending: 'Sending…',
     emailSent: 'Code sent to your email (valid for 10 minutes)',
-    emailSpamHint: "Didn't receive it? Check Spam/Junk, Promotions/Updates, or search your inbox for “Mentorly” or “verification code”.",
+    emailSpamHint: "Didn't receive it? Check Spam/Junk, Promotions/Updates, or search your inbox for “GoMentorGo” or “verification code”.",
     registerBtn: 'Register',
     registering: 'Registering…',
   },

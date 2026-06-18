@@ -1,6 +1,6 @@
 import Link from 'next/link'
 
-export const metadata = { title: '服务条款 | 留学导师平台' }
+export const metadata = { title: '服务条款 | GoMentorGo' }
 
 export default function TermsPage() {
   return (

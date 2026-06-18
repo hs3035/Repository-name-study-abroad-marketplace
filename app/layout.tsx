@@ -8,8 +8,8 @@ const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
 const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: '留学导师平台 / Study Abroad Mentors',
-  description: 'Find PhD students and postdocs to guide your study abroad application',
+  title: 'GoMentorGo — 你的留学搭子',
+  description: '你要走的路，他们已经成功走过。',
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

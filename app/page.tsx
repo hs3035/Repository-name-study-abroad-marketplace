@@ -49,7 +49,7 @@ export default async function HomePage() {
       </header>
 
       <div className="mx-auto max-w-5xl">
-        <h1 className="mb-6 text-4xl font-bold">{d.home.title}</h1>
+        <h1 className="mb-6 whitespace-pre-line text-4xl font-bold leading-tight">{d.home.title}</h1>
         <p className="mb-8 text-lg text-gray-600">{d.home.subtitle}</p>
 
         <div className="flex gap-4">

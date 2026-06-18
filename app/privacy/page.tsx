@@ -1,6 +1,6 @@
 import Link from 'next/link'
 
-export const metadata = { title: '隐私政策 | 留学导师平台' }
+export const metadata = { title: '隐私政策 | GoMentorGo' }
 
 export default function PrivacyPage() {
   return (
