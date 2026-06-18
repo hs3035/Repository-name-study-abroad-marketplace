@@ -53,12 +53,17 @@ SESSION_SECRET=<256-char hex — generate below>
 STRIPE_SECRET_KEY=sk_live_...
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
 STRIPE_WEBHOOK_SECRET=whsec_...
+RESEND_API_KEY=re_...
+EMAIL_FROM=noreply@YOUR-DOMAIN.com
 SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
+SMTP_PORT=465
 SMTP_USER=you@gmail.com
 SMTP_PASS=your_app_password
 SMTP_FROM=you@gmail.com
 ```
+
+For production email, prefer `RESEND_API_KEY` + `EMAIL_FROM`. Gmail SMTP can
+timeout on cloud hosts, so keep it only as a fallback.
 
 Generate SESSION_SECRET:
 ```bash

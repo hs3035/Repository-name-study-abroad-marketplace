@@ -39,7 +39,9 @@ export async function GET() {
     stripeSecretKey: configured('STRIPE_SECRET_KEY'),
     stripePublishableKey: configured('NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY'),
     stripeWebhookSecret: configured('STRIPE_WEBHOOK_SECRET'),
-    smtp: configured('SMTP_USER') && configured('SMTP_PASS'),
+    email: configured('RESEND_API_KEY')
+      ? configured('EMAIL_FROM') || configured('SMTP_FROM') || configured('SMTP_USER')
+      : configured('SMTP_USER') && configured('SMTP_PASS'),
     supportEmail: configured('SUPPORT_EMAIL'),
   }
 

@@ -1,5 +1,11 @@
 import nodemailer from 'nodemailer'
 
+type EmailPayload = {
+  to: string
+  subject: string
+  html: string
+}
+
 // ── SMTP transporter (shared instance) ───────────────────────────────────────
 
 function createTransporter() {
@@ -30,14 +36,90 @@ function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promi
   ])
 }
 
+function getEmailHtml(code: string): string {
+  return `
+    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px">
+      <h2 style="margin-bottom:8px">邮箱验证码</h2>
+      <p style="color:#555;margin-bottom:24px">请在注册页面填入以下验证码，有效期 10 分钟。</p>
+      <div style="background:#f4f4f5;border-radius:12px;padding:24px;text-align:center">
+        <span style="font-size:36px;font-weight:700;letter-spacing:8px;color:#111">${code}</span>
+      </div>
+      <p style="color:#999;font-size:12px;margin-top:24px">请勿将验证码告知他人。</p>
+    </div>
+  `
+}
+
+async function sendWithResend(payload: EmailPayload): Promise<void> {
+  const apiKey = process.env.RESEND_API_KEY
+  if (!apiKey) throw new Error('RESEND_API_KEY is not configured')
+
+  const from = process.env.EMAIL_FROM ?? process.env.SMTP_FROM ?? process.env.SMTP_USER
+  if (!from) throw new Error('EMAIL_FROM is not configured')
+
+  console.log('[email] Sending OTP email via Resend', { to: payload.to, from })
+
+  const res = await withTimeout(
+    fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: `"留学导师平台" <${from}>`,
+        to: payload.to,
+        subject: payload.subject,
+        html: payload.html,
+      }),
+    }),
+    15_000,
+    'Resend send timeout',
+  )
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => '')
+    throw new Error(`Resend email failed (${res.status}): ${body}`)
+  }
+}
+
+async function sendWithSmtp(payload: EmailPayload): Promise<void> {
+  const transporter = createTransporter()
+  if (!transporter) throw new Error('SMTP is not configured')
+
+  const from = process.env.SMTP_FROM ?? process.env.SMTP_USER
+  console.log('[email] Sending OTP email via SMTP', {
+    to: payload.to,
+    host: process.env.SMTP_HOST ?? 'smtp.gmail.com',
+    port: process.env.SMTP_PORT ?? '587',
+    from,
+  })
+  await withTimeout(
+    transporter.sendMail({
+      from: `"留学导师平台" <${from}>`,
+      ...payload,
+    }),
+    15_000,
+    'SMTP send timeout',
+  )
+}
+
 // ── Email ─────────────────────────────────────────────────────────────────────
 
 export async function sendOtpEmail(to: string, code: string): Promise<void> {
-  const transporter = createTransporter()
+  const payload = {
+    to,
+    subject: '【留学导师平台】邮箱验证码',
+    html: getEmailHtml(code),
+  }
 
-  if (!transporter) {
+  if (process.env.RESEND_API_KEY) {
+    await sendWithResend(payload)
+    return
+  }
+
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
     if (process.env.NODE_ENV === 'production') {
-      throw new Error('SMTP is not configured')
+      throw new Error('Email provider is not configured')
     }
     // Dev fallback — code shown in terminal and on-screen Dev badge
     console.log('\n──────────────────────────────────────')
@@ -49,32 +131,7 @@ export async function sendOtpEmail(to: string, code: string): Promise<void> {
     return
   }
 
-  const from = process.env.SMTP_FROM ?? process.env.SMTP_USER
-  console.log('[email] Sending OTP email', {
-    to,
-    host: process.env.SMTP_HOST ?? 'smtp.gmail.com',
-    port: process.env.SMTP_PORT ?? '587',
-    from,
-  })
-  await withTimeout(
-    transporter.sendMail({
-      from: `"留学导师平台" <${from}>`,
-      to,
-      subject: '【留学导师平台】邮箱验证码',
-      html: `
-        <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px">
-          <h2 style="margin-bottom:8px">邮箱验证码</h2>
-          <p style="color:#555;margin-bottom:24px">请在注册页面填入以下验证码，有效期 10 分钟。</p>
-          <div style="background:#f4f4f5;border-radius:12px;padding:24px;text-align:center">
-            <span style="font-size:36px;font-weight:700;letter-spacing:8px;color:#111">${code}</span>
-          </div>
-          <p style="color:#999;font-size:12px;margin-top:24px">请勿将验证码告知他人。</p>
-        </div>
-      `,
-    }),
-    15_000,
-    'SMTP send timeout',
-  )
+  await sendWithSmtp(payload)
 }
 
 // ── SMS (stub) ────────────────────────────────────────────────────────────────
