@@ -113,8 +113,13 @@ export async function sendOtpEmail(to: string, code: string): Promise<void> {
   }
 
   if (process.env.RESEND_API_KEY) {
-    await sendWithResend(payload)
-    return
+    try {
+      await sendWithResend(payload)
+      return
+    } catch (error) {
+      console.error('[email] Resend failed; falling back to SMTP if configured:', error)
+      if (!process.env.SMTP_USER || !process.env.SMTP_PASS) throw error
+    }
   }
 
   if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
