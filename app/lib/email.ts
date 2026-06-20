@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer'
+import type SMTPTransport from 'nodemailer/lib/smtp-transport'
 
 type EmailPayload = {
   to: string
@@ -16,15 +17,18 @@ function createTransporter() {
 
   if (!user || !pass) return null
 
-  return nodemailer.createTransport({
+  const options: SMTPTransport.Options & { family?: 4 | 6 } = {
     host,
     port,
     secure: port === 465,
+    family: 4,
     auth: { user, pass },
     connectionTimeout: 10_000,
     greetingTimeout: 10_000,
     socketTimeout: 15_000,
-  })
+  }
+
+  return nodemailer.createTransport(options)
 }
 
 function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
