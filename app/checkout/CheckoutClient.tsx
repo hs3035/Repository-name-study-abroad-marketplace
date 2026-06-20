@@ -5,6 +5,7 @@ import Link from 'next/link'
 import type { Locale } from '@/app/lib/i18n'
 
 type PaymentMethod = 'card' | 'alipay' | 'wechat_pay'
+type PaymentMode = 'stripe' | 'manual'
 
 type Props = {
   slotId: string
@@ -18,6 +19,8 @@ type Props = {
   adviserSchool: string
   adviserTimezone: string
   stripeReady: boolean
+  paymentMode: PaymentMode
+  manualPayment: { contact: string; note: string; qrUrl: string }
   paymentMethods: PaymentMethod[]
   locale: Locale
 }
@@ -59,7 +62,7 @@ const PAYMENT_METHODS = [
 
 export default function CheckoutClient({
   slotId, utcStart, price, amountFen, platformFeeFen, adviserPayoutFen,
-  adviserName, adviserSchool, adviserTimezone, stripeReady, paymentMethods, locale,
+  adviserName, adviserSchool, adviserTimezone, stripeReady, paymentMode, manualPayment, paymentMethods, locale,
 }: Props) {
   const zh = locale === 'zh'
   const [studentTz, setStudentTz]   = useState<string>('UTC')
@@ -74,12 +77,13 @@ export default function CheckoutClient({
   const student = formatLocalTime(utcStart, studentTz)
   const sameZone = studentTz === adviserTimezone
   const visiblePaymentMethods = PAYMENT_METHODS.filter(method => paymentMethods.includes(method.key))
+  const isManualPayment = paymentMode === 'manual'
 
   async function handlePay() {
     setError('')
     setIsPaying(true)
     try {
-      const res  = await fetch('/api/stripe/checkout', {
+      const res  = await fetch(isManualPayment ? '/api/manual-checkout' : '/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ slotId }),
@@ -152,21 +156,45 @@ export default function CheckoutClient({
           <p className="text-xs text-gray-400 font-medium mb-3 uppercase tracking-wide">
             {zh ? '支持的支付方式' : 'Accepted payment methods'}
           </p>
-          <div className="space-y-2">
-            {visiblePaymentMethods.map(m => (
-              <div key={m.label.en} className="flex items-center gap-3 text-sm">
+          {isManualPayment ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 text-sm">
                 <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gray-100 text-sm font-semibold text-gray-700">
-                  {m.icon}
+                  收
                 </span>
                 <div>
-                  <p className="font-medium">{zh ? m.label.zh : m.label.en}</p>
-                  <p className="text-xs text-gray-400">{zh ? m.sub.zh : m.sub.en}</p>
+                  <p className="font-medium">{zh ? '微信 / 支付宝人工付款' : 'Manual WeChat / Alipay payment'}</p>
+                  <p className="text-xs text-gray-400">
+                    {zh ? '提交预约后，平台人工确认付款' : 'Submit the booking, then the platform confirms payment manually'}
+                  </p>
                 </div>
               </div>
-            ))}
-          </div>
+              {manualPayment.contact && (
+                <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">
+                  {zh ? '收款联系：' : 'Payment contact: '}
+                  <span className="font-semibold">{manualPayment.contact}</span>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {visiblePaymentMethods.map(m => (
+                <div key={m.label.en} className="flex items-center gap-3 text-sm">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gray-100 text-sm font-semibold text-gray-700">
+                    {m.icon}
+                  </span>
+                  <div>
+                    <p className="font-medium">{zh ? m.label.zh : m.label.en}</p>
+                    <p className="text-xs text-gray-400">{zh ? m.sub.zh : m.sub.en}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
           <p className="text-xs text-gray-400 mt-3 border-t pt-3">
-            {zh ? '付款通过 Stripe 安全处理，平台不储存你的支付信息' : 'Payments are securely processed by Stripe. We never store your payment details.'}
+            {isManualPayment
+              ? (zh ? '平台确认收款后，预约订单会进入已付款状态' : 'After payment is confirmed, the booking becomes paid.')
+              : (zh ? '付款通过 Stripe 安全处理，平台不储存你的支付信息' : 'Payments are securely processed by Stripe. We never store your payment details.')}
           </p>
         </div>
 
@@ -177,7 +205,11 @@ export default function CheckoutClient({
               ? `· 导师到账：¥${(adviserPayoutFen / 100).toLocaleString()}（平台收取 15% 服务费）`
               : `· Mentor receives: ¥${(adviserPayoutFen / 100).toLocaleString()} (platform keeps 15% service fee)`}
           </p>
-          <p>{zh ? '· Stripe 处理费由平台承担' : '· Stripe processing fees are covered by the platform'}</p>
+          {isManualPayment ? (
+            <p>{zh ? '· 当前为人工确认付款模式' : '· Current mode: manual payment confirmation'}</p>
+          ) : (
+            <p>{zh ? '· Stripe 处理费由平台承担' : '· Stripe processing fees are covered by the platform'}</p>
+          )}
         </div>
 
         {/* Error */}
@@ -201,8 +233,12 @@ export default function CheckoutClient({
           className="w-full rounded-xl bg-black py-3.5 text-sm font-semibold text-white disabled:opacity-40 hover:bg-gray-800 transition"
         >
           {isPaying
-            ? (zh ? '正在跳转至 Stripe 支付…' : 'Redirecting to Stripe…')
-            : (zh ? `确认支付 ¥${price.toLocaleString()}` : `Pay ¥${price.toLocaleString()}`)}
+            ? (isManualPayment
+                ? (zh ? '正在提交预约…' : 'Submitting booking…')
+                : (zh ? '正在跳转至 Stripe 支付…' : 'Redirecting to Stripe…'))
+            : (isManualPayment
+                ? (zh ? `提交预约并查看付款方式 ¥${price.toLocaleString()}` : `Submit booking ¥${price.toLocaleString()}`)
+                : (zh ? `确认支付 ¥${price.toLocaleString()}` : `Pay ¥${price.toLocaleString()}`))}
         </button>
 
         <Link href="/dashboard/applicant"

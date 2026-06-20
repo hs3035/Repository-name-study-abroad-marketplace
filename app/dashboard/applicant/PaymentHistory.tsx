@@ -65,7 +65,7 @@ function ReviewForm({
 
 const STATUS_LABEL: Record<Order['status'], { zh: string; en: string; color: string }> = {
   pending:              { zh: '待支付',     en: 'Awaiting payment',    color: 'text-gray-500 bg-gray-50 border-gray-200'       },
-  pending_payment:      { zh: '待支付',     en: 'Awaiting payment',    color: 'text-gray-500 bg-gray-50 border-gray-200'       },
+  pending_payment:      { zh: '待人工确认付款', en: 'Awaiting manual confirmation', color: 'text-yellow-700 bg-yellow-50 border-yellow-200' },
   paid:                 { zh: '已付款',     en: 'Paid',                color: 'text-blue-700 bg-blue-50 border-blue-200'       },
   in_progress:          { zh: '进行中',     en: 'In progress',         color: 'text-blue-700 bg-blue-50 border-blue-200'       },
   completed_by_adviser: { zh: '待你确认',   en: 'Awaiting confirmation', color: 'text-yellow-700 bg-yellow-50 border-yellow-200' },
@@ -175,8 +175,8 @@ export default function PaymentHistory({ locale }: { locale: Locale }) {
       {/* Escrow explanation */}
       <div className="rounded-xl border bg-blue-50 border-blue-200 p-4 text-sm text-blue-800">
         {zh
-          ? '💡 你的付款由平台安全托管。导师完成服务后你将收到通知，可在 48 小时内确认完成或申请退款。如无操作，订单将自动确认并向导师放款。'
-          : '💡 Your payment is held securely by the platform. After the adviser marks the service complete, you have 48 hours to confirm or request a refund. If no action is taken, the order is automatically confirmed.'}
+          ? '💡 付款确认后，订单会由平台托管。导师完成服务后你将收到通知，可在 48 小时内确认完成或申请退款。如无操作，订单将自动确认。'
+          : '💡 After payment is confirmed, the order is held by the platform. After the adviser marks the service complete, you have 48 hours to confirm or request a refund. If no action is taken, the order is automatically confirmed.'}
       </div>
 
       {orders.length === 0 ? (
@@ -213,6 +213,14 @@ export default function PaymentHistory({ locale }: { locale: Locale }) {
                     <p className="font-medium">¥{(order.amountFen / 100).toLocaleString()}</p>
                   </div>
                 </div>
+
+                {order.status === 'pending_payment' && (
+                  <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">
+                    {zh
+                      ? '如果你已经通过微信/支付宝付款，请等待平台人工确认。确认后订单会显示为“已付款”。'
+                      : 'If you already paid by WeChat/Alipay, please wait for manual platform confirmation. The order will show as paid after confirmation.'}
+                  </div>
+                )}
 
                 {/* Meeting links — shown when order is paid or in progress */}
                 {(order.status === 'paid' || order.status === 'in_progress') && (() => {

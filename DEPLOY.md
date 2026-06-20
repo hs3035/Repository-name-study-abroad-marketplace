@@ -50,6 +50,11 @@ SUPPORT_EMAIL=support@YOUR-DOMAIN.com
 DATA_DIR=.data
 UPLOAD_DIR=.data/uploads
 SESSION_SECRET=<256-char hex — generate below>
+PAYMENT_MODE=manual
+ADMIN_EMAILS=owner@example.com
+MANUAL_PAYMENT_CONTACT=WeChat/Alipay: your_payment_contact
+MANUAL_PAYMENT_NOTE=付款后请备注订单号，平台会人工确认。
+MANUAL_PAYMENT_QR_URL=
 STRIPE_SECRET_KEY=sk_live_...
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
 STRIPE_WEBHOOK_SECRET=whsec_...
@@ -69,6 +74,28 @@ timeout on cloud hosts, so keep it only as a fallback.
 Generate SESSION_SECRET:
 ```bash
 node -e "console.log(require('crypto').randomBytes(128).toString('hex'))"
+```
+
+### Manual payment mode for early launch
+If you are not ready to use Stripe live mode, keep:
+
+```env
+PAYMENT_MODE=manual
+ADMIN_EMAILS=owner@example.com
+```
+
+Students will submit bookings and see WeChat/Alipay payment instructions.
+The slot is locked immediately. An admin listed in `ADMIN_EMAILS` can visit
+`/admin` to:
+
+- confirm the student has paid manually
+- cancel an unpaid order and release the slot
+- mark offline adviser payout as completed after the student confirms service
+
+Later, when Stripe/live payments are ready, switch:
+
+```env
+PAYMENT_MODE=stripe
 ```
 
 ### 5. Deploy

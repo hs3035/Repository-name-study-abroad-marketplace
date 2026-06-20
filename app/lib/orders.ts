@@ -65,6 +65,11 @@ export function getOrderById(id: string): Order | undefined {
   return orders.get(id)
 }
 
+export function getAllOrders(): Order[] {
+  return Array.from(orders.values())
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+}
+
 export function getOrderByStripeSession(stripeSessionId: string): Order | undefined {
   return Array.from(orders.values()).find(o => o.stripeSessionId === stripeSessionId)
 }
@@ -83,6 +88,23 @@ export function getOrdersByApplicant(applicantId: string): Order[] {
   return Array.from(orders.values())
     .filter(o => o.applicantId === applicantId)
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+}
+
+const ACTIVE_SLOT_STATUSES = new Set<OrderStatus>([
+  'pending',
+  'pending_payment',
+  'paid',
+  'in_progress',
+  'completed_by_adviser',
+  'confirmed',
+  'refund_requested',
+  'released',
+])
+
+export function getActiveOrderBySlot(slotId: string): Order | undefined {
+  return Array.from(orders.values()).find(
+    o => o.slotId === slotId && ACTIVE_SLOT_STATUSES.has(o.status),
+  )
 }
 
 export function getAdviserCompletedOrderCount(adviserId: string): number {
@@ -145,6 +167,12 @@ export function updateOrderStatus(
 export function markOrderPaid(orderId: string, stripePaymentIntentId: string): boolean {
   return updateOrderStatus(orderId, 'paid', {
     stripePaymentIntentId,
+    paidAt: new Date().toISOString(),
+  })
+}
+
+export function markManualOrderPaid(orderId: string): boolean {
+  return updateOrderStatus(orderId, 'paid', {
     paidAt: new Date().toISOString(),
   })
 }

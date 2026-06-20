@@ -5,6 +5,7 @@ import { getAdviserById } from '@/app/lib/advisers'
 import { getLocale } from '@/app/lib/locale'
 import { calcFees } from '@/app/lib/stripe'
 import { getCheckoutPaymentMethods } from '@/app/lib/payment-methods'
+import { getManualPaymentConfig, getPaymentMode } from '@/app/lib/payment-mode'
 import CheckoutClient from './CheckoutClient'
 import Link from 'next/link'
 
@@ -32,6 +33,7 @@ export default async function CheckoutPage({ searchParams }: Props) {
 
   const amountFen = slot.price * 100
   const { platformFeeFen, adviserPayoutFen } = calcFees(amountFen)
+  const paymentMode = getPaymentMode()
 
   return (
     <CheckoutClient
@@ -45,7 +47,9 @@ export default async function CheckoutPage({ searchParams }: Props) {
       adviserName={adviser.name}
       adviserSchool={adviser.school}
       adviserTimezone={adviser.timezone}
-      stripeReady={!!adviser.stripeAccountId}
+      stripeReady={paymentMode === 'manual' || !!adviser.stripeAccountId}
+      paymentMode={paymentMode}
+      manualPayment={getManualPaymentConfig()}
       paymentMethods={getCheckoutPaymentMethods()}
       locale={locale}
     />

@@ -159,6 +159,20 @@ export function bookSlot(
   return true
 }
 
+export function reopenSlot(slotId: string): boolean {
+  const slot = slots.get(slotId)
+  if (!slot || slot.status !== 'booked') return false
+  slots.set(slotId, {
+    id: slot.id,
+    adviserId: slot.adviserId,
+    utcStart: slot.utcStart,
+    price: slot.price,
+    status: 'available',
+  })
+  saveMap(SLOTS_FILE, slots).catch(() => {})
+  return true
+}
+
 export function getSlotById(id: string): Slot | undefined {
   return slots.get(id)
 }
