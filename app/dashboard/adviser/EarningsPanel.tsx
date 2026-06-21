@@ -10,6 +10,7 @@ import {
 import { submitReview, fetchOrderReviewStatus } from '@/app/actions/reviews'
 import type { Order } from '@/app/lib/orders'
 import type { Locale } from '@/app/lib/i18n'
+import type { PaymentMode } from '@/app/lib/payment-mode'
 
 function StarPicker({ value, onChange }: { value: number; onChange: (n: number) => void }) {
   return (
@@ -185,8 +186,9 @@ const STATUS_TAG: Record<Order['status'], { zh: string; en: string; color: strin
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
-export default function EarningsPanel({ locale }: { locale: Locale }) {
+export default function EarningsPanel({ locale, paymentMode }: { locale: Locale; paymentMode: PaymentMode }) {
   const zh = locale === 'zh'
+  const isManualPayment = paymentMode === 'manual'
   const searchParams = useSearchParams()
   const [summary, setSummary]         = useState<EarningsSummary | null>(null)
   const [orders, setOrders]           = useState<Order[]>([])
@@ -204,7 +206,11 @@ export default function EarningsPanel({ locale }: { locale: Locale }) {
       .catch(err  => { console.error('Stripe status fetch error:', err); return { connected: false } as StripeStatus }), [])
 
   const reload = useCallback(async () => {
-    const [sum, ords, status] = await Promise.all([fetchAdviserEarnings(), fetchAdviserOrders(), fetchStripeStatus()])
+    const [sum, ords, status] = await Promise.all([
+      fetchAdviserEarnings(),
+      fetchAdviserOrders(),
+      isManualPayment ? Promise.resolve(null) : fetchStripeStatus(),
+    ])
     setSummary(sum); setOrders(ords); setStripeSt(status)
     const completedIds = ords
       .filter(o => o.status === 'confirmed' || o.status === 'released')
@@ -216,7 +222,7 @@ export default function EarningsPanel({ locale }: { locale: Locale }) {
       setReviewed(doneMap)
     }
     setLoading(false)
-  }, [fetchStripeStatus])
+  }, [fetchStripeStatus, isManualPayment])
 
   useEffect(() => {
     const id = window.setTimeout(() => { void reload() }, 0)
@@ -224,9 +230,10 @@ export default function EarningsPanel({ locale }: { locale: Locale }) {
   }, [reload])
 
   useEffect(() => {
+    if (isManualPayment) return
     if (searchParams.get('stripe') !== 'success') return
     fetchStripeStatus().then(s => setStripeSt(s))
-  }, [fetchStripeStatus, searchParams])
+  }, [fetchStripeStatus, isManualPayment, searchParams])
 
   function handleMarkComplete(orderId: string) {
     startComplete(async () => {
@@ -262,8 +269,8 @@ export default function EarningsPanel({ locale }: { locale: Locale }) {
     return <div className="py-8 text-center text-sm text-gray-400">{zh ? '加载中…' : 'Loading…'}</div>
   }
 
-  const isConnected = stripeStatus?.chargesEnabled === true && stripeStatus?.payoutsEnabled === true
-  const isPending   = !isConnected && stripeStatus?.detailsSubmitted === true
+  const isConnected = !isManualPayment && stripeStatus?.chargesEnabled === true && stripeStatus?.payoutsEnabled === true
+  const isPending   = !isManualPayment && !isConnected && stripeStatus?.detailsSubmitted === true
 
   return (
     <div className="space-y-6">
@@ -272,46 +279,71 @@ export default function EarningsPanel({ locale }: { locale: Locale }) {
       <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800 leading-relaxed">
         <p className="font-medium mb-1">{zh ? '💡 收款流程说明' : '💡 How payouts work'}</p>
         <p>
-          {zh
-            ? '学生付款后，资金由平台安全托管。完成服务后请点击「标记服务已完成」，学生有 48 小时确认。若学生无操作，系统自动放款到你的账户。'
-            : 'Student payments are held securely by the platform. After completing the service, click "Mark Complete". The student has 48 hours to confirm. If no action is taken, funds are automatically released to your account.'}
+          {isManualPayment
+            ? (zh
+                ? '学生通过 GoMentorGo 微信/支付宝付款后，资金由平台统一代收。完成服务后请点击「标记服务已完成」，学生有 48 小时确认。确认后平台按订单金额的 90% 手动结算给你。'
+                : 'Students pay GoMentorGo by WeChat Pay or Alipay. The platform collects funds first. After completing the service, click "Mark Complete". The student has 48 hours to confirm, then the platform manually settles 90% to you.')
+            : (zh
+                ? '学生付款后，资金由平台安全托管。完成服务后请点击「标记服务已完成」，学生有 48 小时确认。若学生无操作，系统自动放款到你的账户。'
+                : 'Student payments are held securely by the platform. After completing the service, click "Mark Complete". The student has 48 hours to confirm. If no action is taken, funds are automatically released to your account.')}
         </p>
       </div>
 
-      {/* ── Stripe Connect banner ─────────────────────────────────── */}
-      <div className={`rounded-xl border p-4 flex items-start justify-between gap-4
-        ${isConnected ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}`}>
-        <div>
-          <p className={`text-sm font-medium ${isConnected ? 'text-green-700' : 'text-amber-700'}`}>
-            {isConnected
-              ? (zh ? '✅ Stripe 收款已连接' : '✅ Stripe payouts connected')
-              : isPending
-                ? (zh ? '⏳ Stripe 开户审核中…' : '⏳ Stripe onboarding in progress…')
-                : (zh ? '⚠️ 尚未连接 Stripe 收款' : '⚠️ Stripe payouts not connected')}
-          </p>
-          <p className={`text-xs mt-0.5 ${isConnected ? 'text-green-600' : 'text-amber-600'}`}>
-            {isConnected
-              ? (zh ? '学生确认或 48 小时后，款项自动转入你的账户' : 'Funds transfer automatically after confirmation or 48 hours')
-              : (zh ? '连接 Stripe 才能接收付款' : 'Connect Stripe to receive payments')}
-          </p>
+      {/* ── Payout setup banner ───────────────────────────────────── */}
+      {isManualPayment ? (
+        <div className="rounded-xl border border-green-200 bg-green-50 p-4 flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium text-green-700">
+              {zh ? '✅ 平台统一代收，人工结算给导师' : '✅ Platform collects payments and settles manually'}
+            </p>
+            <p className="text-xs mt-0.5 text-green-600">
+              {zh
+                ? '请在「档案」里的「结算账户」填写你的微信/支付宝账号。平台确认学生付款和服务完成后，会按系统算好的金额结算给你。'
+                : 'Add your WeChat Pay or Alipay payout details in Profile → Payout Account. After payment and service confirmation, the platform settles the calculated amount to you.'}
+            </p>
+          </div>
+          <a
+            href="#profile-payout-section"
+            className="shrink-0 rounded-xl border border-green-300 bg-white px-4 py-2 text-xs font-medium text-green-700 hover:bg-green-100 transition"
+          >
+            {zh ? '去设置结算账户' : 'Set payout account'}
+          </a>
         </div>
-        <div className="shrink-0">
-          {!isConnected && (
-            <button onClick={handleConnectStripe} disabled={connecting}
-              className="rounded-xl bg-black px-4 py-2 text-xs font-medium text-white disabled:opacity-50 hover:bg-gray-800 transition">
-              {connecting ? (zh ? '跳转中…' : 'Redirecting…')
-                : isPending ? (zh ? '继续开户' : 'Continue setup')
-                : (zh ? '连接 Stripe' : 'Connect Stripe')}
-            </button>
-          )}
-          {isConnected && (
-            <button onClick={handleOpenStripeDashboard}
-              className="rounded-xl border px-4 py-2 text-xs font-medium hover:bg-gray-50 transition">
-              {zh ? '提现 / 查看账户' : 'Withdraw / Dashboard'}
-            </button>
-          )}
+      ) : (
+        <div className={`rounded-xl border p-4 flex items-start justify-between gap-4
+          ${isConnected ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}`}>
+          <div>
+            <p className={`text-sm font-medium ${isConnected ? 'text-green-700' : 'text-amber-700'}`}>
+              {isConnected
+                ? (zh ? '✅ Stripe 收款已连接' : '✅ Stripe payouts connected')
+                : isPending
+                  ? (zh ? '⏳ Stripe 开户审核中…' : '⏳ Stripe onboarding in progress…')
+                  : (zh ? '⚠️ 尚未连接 Stripe 收款' : '⚠️ Stripe payouts not connected')}
+            </p>
+            <p className={`text-xs mt-0.5 ${isConnected ? 'text-green-600' : 'text-amber-600'}`}>
+              {isConnected
+                ? (zh ? '学生确认或 48 小时后，款项自动转入你的账户' : 'Funds transfer automatically after confirmation or 48 hours')
+                : (zh ? '连接 Stripe 才能接收付款' : 'Connect Stripe to receive payments')}
+            </p>
+          </div>
+          <div className="shrink-0">
+            {!isConnected && (
+              <button onClick={handleConnectStripe} disabled={connecting}
+                className="rounded-xl bg-black px-4 py-2 text-xs font-medium text-white disabled:opacity-50 hover:bg-gray-800 transition">
+                {connecting ? (zh ? '跳转中…' : 'Redirecting…')
+                  : isPending ? (zh ? '继续开户' : 'Continue setup')
+                  : (zh ? '连接 Stripe' : 'Connect Stripe')}
+              </button>
+            )}
+            {isConnected && (
+              <button onClick={handleOpenStripeDashboard}
+                className="rounded-xl border px-4 py-2 text-xs font-medium hover:bg-gray-50 transition">
+                {zh ? '提现 / 查看账户' : 'Withdraw / Dashboard'}
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ── Summary cards ─────────────────────────────────────────── */}
       {summary && (
@@ -396,9 +428,13 @@ export default function EarningsPanel({ locale }: { locale: Locale }) {
                     {canMarkComplete && (
                       <div className="space-y-2">
                         <p className="text-xs text-gray-500">
-                          {zh
-                            ? '服务完成后，点击下方按钮通知学生确认，确认后款项将转入你的账户。'
-                            : 'Once the service is done, click below to notify the student. Payment releases after their confirmation.'}
+                          {isManualPayment
+                            ? (zh
+                                ? '服务完成后，点击下方按钮通知学生确认。学生确认后，平台会按系统金额人工结算给你。'
+                                : 'Once the service is done, click below to notify the student. After confirmation, the platform manually settles the calculated amount to you.')
+                            : (zh
+                                ? '服务完成后，点击下方按钮通知学生确认，确认后款项将转入你的账户。'
+                                : 'Once the service is done, click below to notify the student. Payment releases after their confirmation.')}
                         </p>
                         <button
                           onClick={() => handleMarkComplete(order.id)}
@@ -420,8 +456,8 @@ export default function EarningsPanel({ locale }: { locale: Locale }) {
                         </p>
                         <p className="text-xs text-yellow-700">
                           {zh
-                            ? '学生有 48 小时确认服务完成，若未操作系统将自动放款。'
-                            : 'The student has 48 hours to confirm. If no action is taken, funds are released automatically.'}
+                            ? (isManualPayment ? '学生有 48 小时确认服务完成。若未操作，系统会自动确认，平台随后人工结算。' : '学生有 48 小时确认服务完成，若未操作系统将自动放款。')
+                            : (isManualPayment ? 'The student has 48 hours to confirm. If no action is taken, the system auto-confirms and the platform settles manually.' : 'The student has 48 hours to confirm. If no action is taken, funds are released automatically.')}
                         </p>
                         <div className="mt-2 rounded-md bg-yellow-100 border border-yellow-300 px-3 py-2 space-y-1">
                           <div className="flex justify-between text-xs">
@@ -429,14 +465,16 @@ export default function EarningsPanel({ locale }: { locale: Locale }) {
                             <Countdown autoReleaseAt={order.autoReleaseAt} zh={zh} />
                           </div>
                           <div className="flex justify-between text-xs">
-                            <span className="text-yellow-700">{zh ? '自动放款时间' : 'Auto-releases at'}</span>
+                            <span className="text-yellow-700">
+                              {zh ? (isManualPayment ? '自动确认时间' : '自动放款时间') : (isManualPayment ? 'Auto-confirms at' : 'Auto-releases at')}
+                            </span>
                             <span className="font-medium text-yellow-800">{formatFull(order.autoReleaseAt, zh)}</span>
                           </div>
                         </div>
                         <p className="text-xs text-yellow-600 mt-1">
                           {zh
-                            ? '⚠ 若学生在 48 小时内申请退款，放款将暂停，平台将介入处理。'
-                            : '⚠ If the student requests a refund within 48 hours, the payout will be paused for review.'}
+                            ? '⚠ 若学生在 48 小时内申请退款，结算将暂停，平台将介入处理。'
+                            : '⚠ If the student requests a refund within 48 hours, settlement will be paused for review.'}
                         </p>
                       </div>
                     )}
@@ -445,7 +483,9 @@ export default function EarningsPanel({ locale }: { locale: Locale }) {
                     {order.status === 'confirmed' && (
                       <div className="rounded-lg bg-green-50 border border-green-200 px-3 py-2">
                         <p className="text-xs text-green-700 font-medium">
-                          {zh ? '✅ 学生已确认，款项正在转入你的账户' : '✅ Student confirmed — payout is being processed'}
+                          {zh
+                            ? (isManualPayment ? '✅ 学生已确认，等待平台人工结算' : '✅ 学生已确认，款项正在转入你的账户')
+                            : (isManualPayment ? '✅ Student confirmed — awaiting manual platform settlement' : '✅ Student confirmed — payout is being processed')}
                         </p>
                       </div>
                     )}
@@ -455,8 +495,8 @@ export default function EarningsPanel({ locale }: { locale: Locale }) {
                       <div className="rounded-lg bg-green-50 border border-green-200 px-3 py-2">
                         <p className="text-xs text-green-700 font-medium">
                           {zh
-                            ? `✅ 款项已于 ${formatFull(order.releasedAt, zh)} 转入你的账户`
-                            : `✅ Payment released on ${formatFull(order.releasedAt, zh)}`}
+                            ? (isManualPayment ? `✅ 平台已于 ${formatFull(order.releasedAt, zh)} 标记结算完成` : `✅ 款项已于 ${formatFull(order.releasedAt, zh)} 转入你的账户`)
+                            : (isManualPayment ? `✅ Settlement marked complete on ${formatFull(order.releasedAt, zh)}` : `✅ Payment released on ${formatFull(order.releasedAt, zh)}`)}
                         </p>
                       </div>
                     )}

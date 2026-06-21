@@ -10,6 +10,7 @@ import EarningsPanel from './EarningsPanel'
 import TodaysTasks from './TodaysTasks'
 import SearchPeopleClient from '@/app/components/SearchPeopleClient'
 import ProfilePhotoUpload from './ProfilePhotoUpload'
+import { getPaymentMode } from '@/app/lib/payment-mode'
 
 function computeCompletion(adviser: ReturnType<typeof getAdviserById>) {
   if (!adviser) return { pct: 0, items: [] }
@@ -38,6 +39,7 @@ export default async function AdviserDashboard() {
   const zh = locale === 'zh'
   const allAdvisers = getAllAdvisers().filter(a => a.id !== adviser.id)
   const { pct, items } = computeCompletion(adviser)
+  const paymentMode = getPaymentMode()
 
   return (
     <div className="space-y-8">
@@ -78,7 +80,7 @@ export default async function AdviserDashboard() {
       </section>
 
       {/* Profile card */}
-      <section className="bg-white rounded-2xl border p-6">
+      <section id="profile-payout-section" className="bg-white rounded-2xl border p-6">
         <h2 className="text-lg font-semibold mb-4">{ad.profileTitle}</h2>
 
         <div className="flex items-start gap-5 mb-6">
@@ -146,7 +148,7 @@ export default async function AdviserDashboard() {
       {/* Earnings & Stripe Connect */}
       <section id="orders-section" className="bg-white rounded-2xl border p-6">
         <h2 className="text-lg font-semibold mb-5">{zh ? '收款 & 收益' : 'Payments & Earnings'}</h2>
-        <EarningsPanel locale={locale} />
+        <EarningsPanel locale={locale} paymentMode={paymentMode} />
       </section>
 
       {/* Browse other advisers */}
