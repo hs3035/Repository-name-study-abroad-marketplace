@@ -7,9 +7,9 @@ export type OrderStatus =
   | 'pending_payment'       // created, waiting for student to pay
   | 'paid'                  // payment received by platform (held in escrow)
   | 'in_progress'           // adviser has started the service
-  | 'completed_by_adviser'  // adviser marked done; student has 48h to confirm
+  | 'completed_by_adviser'  // adviser marked done; student has 24h to confirm
   | 'confirmed'             // student confirmed — ready to release
-  | 'refund_requested'      // student disputed within 48h
+  | 'refund_requested'      // student disputed within 24h
   | 'released'              // payment transferred to adviser
   | 'failed'                // payment failed
   | 'refunded'              // money returned to student
@@ -41,7 +41,7 @@ export type Order = {
   paidAt?: string
   /** When the adviser marked the service as complete */
   adviserCompletedAt?: string
-  /** 48h after adviserCompletedAt — auto-releases if student takes no action */
+  /** 24h after adviserCompletedAt — auto-confirms/releases if student takes no action */
   autoReleaseAt?: string
   /** When the student confirmed the service */
   studentConfirmedAt?: string
@@ -54,6 +54,7 @@ export type Order = {
 // ── Store ─────────────────────────────────────────────────────────────────────
 
 const FILE = '.data/orders.json'
+export const STUDENT_CONFIRMATION_WINDOW_HOURS = 24
 const g = global as typeof global & { _orders?: Map<string, Order> }
 const loaded = loadMapSync<Order>(FILE)
 const orders: Map<string, Order> =
@@ -177,14 +178,16 @@ export function markManualOrderPaid(orderId: string): boolean {
   })
 }
 
-/** Adviser marks the service as completed. Starts the 48h student confirmation window. */
+/** Adviser marks the service as completed. Starts the student confirmation window. */
 export function markAdviserCompleted(orderId: string): boolean {
   const order = orders.get(orderId)
   if (!order) return false
   if (order.status !== 'paid' && order.status !== 'in_progress') return false
 
   const now = new Date()
-  const autoReleaseAt = new Date(now.getTime() + 48 * 60 * 60 * 1000).toISOString()
+  const autoReleaseAt = new Date(
+    now.getTime() + STUDENT_CONFIRMATION_WINDOW_HOURS * 60 * 60 * 1000,
+  ).toISOString()
   return updateOrderStatus(orderId, 'completed_by_adviser', {
     adviserCompletedAt: now.toISOString(),
     autoReleaseAt,
@@ -201,7 +204,7 @@ export function markStudentConfirmed(orderId: string): boolean {
   })
 }
 
-/** Student requests a refund within the 48h window. */
+/** Student requests a refund within the student confirmation window. */
 export function markRefundRequested(orderId: string): boolean {
   const order = orders.get(orderId)
   if (!order) return false

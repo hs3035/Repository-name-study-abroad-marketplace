@@ -4,6 +4,7 @@ import {
   getAdviserById,
   type AdviserPayoutInfo,
 } from '@/app/lib/advisers'
+import { checkAndAutoRelease } from '@/app/actions/payments'
 import {
   getAllOrders,
   getOrderById,
@@ -27,6 +28,7 @@ export type AdminOrder = Order & {
 
 export async function adminFetchOrders(): Promise<AdminOrder[]> {
   if (!(await requireAdmin())) return []
+  await checkAndAutoRelease()
   return getAllOrders().map(order => ({
     ...order,
     adviserPayoutInfo: getAdviserById(order.adviserId)?.payoutInfo,

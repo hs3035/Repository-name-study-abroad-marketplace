@@ -11,8 +11,10 @@ import {
   markStudentConfirmed,
   markRefundRequested,
   markOrderReleased,
+  STUDENT_CONFIRMATION_WINDOW_HOURS,
   type Order,
 } from '@/app/lib/orders'
+import { getPaymentMode } from '@/app/lib/payment-mode'
 import { getStripe } from '@/app/lib/stripe'
 
 export type AdviserEarningsSummary = {
@@ -51,7 +53,7 @@ export async function fetchApplicantOrders(): Promise<Order[]> {
 
 // ── Write actions ─────────────────────────────────────────────────────────────
 
-/** Adviser marks the consultation as completed. Starts the 48h student window. */
+/** Adviser marks the consultation as completed. Starts the student confirmation window. */
 export async function adviserMarkComplete(orderId: string): Promise<{ ok: boolean; error?: string }> {
   const session = await getSession()
   if (!session || session.role !== 'adviser') return { ok: false, error: '未登录' }
@@ -84,7 +86,7 @@ export async function studentConfirmComplete(orderId: string): Promise<{ ok: boo
   return { ok: true }
 }
 
-/** Student requests a refund within the 48h window. */
+/** Student requests a refund within the student confirmation window. */
 export async function studentRequestRefund(orderId: string): Promise<{ ok: boolean; error?: string }> {
   const session = await getSession()
   if (!session || session.role !== 'applicant') return { ok: false, error: '未登录' }
@@ -103,14 +105,23 @@ export async function studentRequestRefund(orderId: string): Promise<{ ok: boole
 // ── Internal helpers ──────────────────────────────────────────────────────────
 
 /**
- * Check for orders past their autoReleaseAt time and release them.
+ * Check for orders past their autoReleaseAt time and confirm/release them.
  * Called automatically when fetching orders so no separate cron job is needed.
  */
-async function checkAndAutoRelease(): Promise<void> {
+export async function checkAndAutoRelease(): Promise<void> {
   const eligible = getOrdersReadyForAutoRelease()
   if (eligible.length === 0) return
 
-  console.log(`[payments] Auto-releasing ${eligible.length} order(s)`)
+  if (getPaymentMode() === 'manual') {
+    console.log(`[payments] Auto-confirming ${eligible.length} manual order(s) after ${STUDENT_CONFIRMATION_WINDOW_HOURS}h`)
+    for (const order of eligible) {
+      const ok = markStudentConfirmed(order.id)
+      if (ok) console.log(`[payments] ✅ Auto-confirmed manual order ${order.id}`)
+    }
+    return
+  }
+
+  console.log(`[payments] Auto-releasing ${eligible.length} Stripe order(s) after ${STUDENT_CONFIRMATION_WINDOW_HOURS}h`)
   await Promise.all(eligible.map(o => releasePayment(o.id)))
 }
 

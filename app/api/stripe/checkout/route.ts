@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
   // ── Escrow mode: charge platform first, transfer to adviser after confirmation ──
   // We do NOT use transfer_data. The full payment goes to the platform.
   // A Stripe transfer is created only after the student confirms service completion
-  // (or after the 48-hour auto-release window expires).
+  // (or after the auto-release window expires).
   const paymentIntentData: Stripe.Checkout.SessionCreateParams['payment_intent_data'] = {}
   console.log(`[stripe/checkout] Escrow mode — adviser: ${adviser.stripeAccountId} (transfer deferred until confirmation)`)
 

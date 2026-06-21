@@ -175,8 +175,8 @@ export default function PaymentHistory({ locale }: { locale: Locale }) {
       {/* Escrow explanation */}
       <div className="rounded-xl border bg-blue-50 border-blue-200 p-4 text-sm text-blue-800">
         {zh
-          ? '💡 付款确认后，订单会由平台托管。导师完成服务后你将收到通知，可在 48 小时内确认完成或申请退款。如无操作，订单将自动确认。'
-          : '💡 After payment is confirmed, the order is held by the platform. After the adviser marks the service complete, you have 48 hours to confirm or request a refund. If no action is taken, the order is automatically confirmed.'}
+          ? '💡 付款确认后，订单会由平台托管。导师完成服务后你将收到通知，可在 24 小时内确认完成或申请退款。如无操作，订单将自动确认。'
+          : '💡 After payment is confirmed, the order is held by the platform. After the adviser marks the service complete, you have 24 hours to confirm or request a refund. If no action is taken, the order is automatically confirmed.'}
       </div>
 
       {orders.length === 0 ? (

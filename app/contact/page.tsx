@@ -61,7 +61,7 @@ export default function ContactPage() {
             },
             {
               q: '如何修改或取消预约？',
-              a: '目前预约一经支付即锁定，请在 48 小时确认窗口内通过"申请退款"处理。如有特殊情况请联系平台客服。',
+              a: '目前预约一经支付即锁定，请在 24 小时确认窗口内通过"申请退款"处理。如有特殊情况请联系平台客服。',
             },
           ].map(item => (
             <details key={item.q} className="group border-b last:border-0 pb-3 last:pb-0">

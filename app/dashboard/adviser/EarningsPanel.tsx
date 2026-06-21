@@ -285,11 +285,11 @@ export default function EarningsPanel({ locale, paymentMode }: { locale: Locale;
         <p>
           {isManualPayment
             ? (zh
-                ? '学生通过 GoMentorGo 微信/支付宝付款后，资金由平台统一代收。完成服务后请点击「标记服务已完成」，学生有 48 小时确认。确认后平台按订单金额的 90% 手动结算给你。'
-                : 'Students pay GoMentorGo by WeChat Pay or Alipay. The platform collects funds first. After completing the service, click "Mark Complete". The student has 48 hours to confirm, then the platform manually settles 90% to you.')
+                ? '学生通过 GoMentorGo 微信/支付宝付款后，资金由平台统一代收。完成服务后请点击「标记服务已完成」，学生有 24 小时确认。确认后平台按订单金额的 90% 手动结算给你。'
+                : 'Students pay GoMentorGo by WeChat Pay or Alipay. The platform collects funds first. After completing the service, click "Mark Complete". The student has 24 hours to confirm, then the platform manually settles 90% to you.')
             : (zh
-                ? '学生付款后，资金由平台安全托管。完成服务后请点击「标记服务已完成」，学生有 48 小时确认。若学生无操作，系统自动放款到你的账户。'
-                : 'Student payments are held securely by the platform. After completing the service, click "Mark Complete". The student has 48 hours to confirm. If no action is taken, funds are automatically released to your account.')}
+                ? '学生付款后，资金由平台安全托管。完成服务后请点击「标记服务已完成」，学生有 24 小时确认。若学生无操作，系统自动放款到你的账户。'
+                : 'Student payments are held securely by the platform. After completing the service, click "Mark Complete". The student has 24 hours to confirm. If no action is taken, funds are automatically released to your account.')}
         </p>
       </div>
 
@@ -327,7 +327,7 @@ export default function EarningsPanel({ locale, paymentMode }: { locale: Locale;
             </p>
             <p className={`text-xs mt-0.5 ${isConnected ? 'text-green-600' : 'text-amber-600'}`}>
               {isConnected
-                ? (zh ? '学生确认或 48 小时后，款项自动转入你的账户' : 'Funds transfer automatically after confirmation or 48 hours')
+                ? (zh ? '学生确认或 24 小时后，款项自动转入你的账户' : 'Funds transfer automatically after confirmation or 24 hours')
                 : (zh ? '连接 Stripe 才能接收付款' : 'Connect Stripe to receive payments')}
             </p>
           </div>
@@ -461,8 +461,8 @@ export default function EarningsPanel({ locale, paymentMode }: { locale: Locale;
                         </p>
                         <p className="text-xs text-yellow-700">
                           {zh
-                            ? (isManualPayment ? '学生有 48 小时确认服务完成。若未操作，系统会自动确认，平台随后人工结算。' : '学生有 48 小时确认服务完成，若未操作系统将自动放款。')
-                            : (isManualPayment ? 'The student has 48 hours to confirm. If no action is taken, the system auto-confirms and the platform settles manually.' : 'The student has 48 hours to confirm. If no action is taken, funds are released automatically.')}
+                            ? (isManualPayment ? '学生有 24 小时确认服务完成。若未操作，系统会自动确认，平台随后人工结算。' : '学生有 24 小时确认服务完成，若未操作系统将自动放款。')
+                            : (isManualPayment ? 'The student has 24 hours to confirm. If no action is taken, the system auto-confirms and the platform settles manually.' : 'The student has 24 hours to confirm. If no action is taken, funds are released automatically.')}
                         </p>
                         <div className="mt-2 rounded-md bg-yellow-100 border border-yellow-300 px-3 py-2 space-y-1">
                           <div className="flex justify-between text-xs">
@@ -478,8 +478,8 @@ export default function EarningsPanel({ locale, paymentMode }: { locale: Locale;
                         </div>
                         <p className="text-xs text-yellow-600 mt-1">
                           {zh
-                            ? '⚠ 若学生在 48 小时内申请退款，结算将暂停，平台将介入处理。'
-                            : '⚠ If the student requests a refund within 48 hours, settlement will be paused for review.'}
+                            ? '⚠ 若学生在 24 小时内申请退款，结算将暂停，平台将介入处理。'
+                            : '⚠ If the student requests a refund within 24 hours, settlement will be paused for review.'}
                         </p>
                       </div>
                     )}
