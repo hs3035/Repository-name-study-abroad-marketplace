@@ -31,8 +31,8 @@ export default async function ManualPaymentPage({ searchParams }: Props) {
           </h1>
           <p className="text-sm text-gray-500">
             {zh
-              ? '请使用微信或支付宝完成付款。平台确认后，导师会看到已付款订单。'
-              : 'Please pay with WeChat or Alipay. After confirmation, the mentor will see the paid order.'}
+              ? '请使用微信、支付宝或银行转账完成付款。平台确认后，导师会看到已付款订单。'
+              : 'Please pay with WeChat, Alipay, or bank transfer. After confirmation, the mentor will see the paid order.'}
           </p>
         </div>
 
@@ -53,6 +53,7 @@ export default async function ManualPaymentPage({ searchParams }: Props) {
           note={manual.note}
           wechatQrUrl={manual.wechatQrUrl}
           alipayQrUrl={manual.alipayQrUrl}
+          bankTransfer={manual.bankTransfer}
         />
 
         <div className="rounded-xl bg-blue-50 border border-blue-100 p-4 text-xs text-blue-700">

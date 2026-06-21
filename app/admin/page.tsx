@@ -36,7 +36,7 @@ export default async function AdminPage() {
           <div>
             <h1 className="text-2xl font-bold">{zh ? '平台订单管理' : 'Platform order admin'}</h1>
             <p className="text-sm text-gray-500 mt-1">
-              {zh ? '用于人工确认微信/支付宝付款和人工结算。' : 'Confirm manual payments and manual payouts.'}
+              {zh ? '用于人工确认微信/支付宝/银行转账付款和人工结算。' : 'Confirm manual payments and manual payouts.'}
             </p>
           </div>
           <Link href="/" className="rounded-xl border bg-white px-4 py-2 text-sm hover:bg-gray-50">

@@ -169,7 +169,7 @@ export default function CheckoutClient({
                   收
                 </span>
                 <div>
-                  <p className="font-medium">{zh ? '微信 / 支付宝人工付款' : 'Manual WeChat / Alipay payment'}</p>
+                  <p className="font-medium">{zh ? '微信 / 支付宝 / 银行转账人工付款' : 'Manual WeChat / Alipay / bank transfer payment'}</p>
                   <p className="text-xs text-gray-400">
                     {zh ? '提交预约后，平台人工确认付款' : 'Submit the booking, then the platform confirms payment manually'}
                   </p>

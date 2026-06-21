@@ -77,7 +77,7 @@ export default function AdminOrdersPanel({ locale }: Props) {
           <div>
             <h2 className="font-semibold">{zh ? '人工付款确认' : 'Manual payment confirmation'}</h2>
             <p className="text-xs text-gray-500 mt-1">
-              {zh ? '学生通过微信/支付宝付款后，在这里确认。' : 'Confirm after the student pays by WeChat or Alipay.'}
+              {zh ? '学生通过微信/支付宝/银行转账付款后，在这里确认。' : 'Confirm after the student pays by WeChat, Alipay, or bank transfer.'}
             </p>
           </div>
           <button onClick={load} disabled={pending} className="rounded-lg border px-3 py-1.5 text-xs hover:bg-gray-50 disabled:opacity-50">

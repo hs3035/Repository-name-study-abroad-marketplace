@@ -10,6 +10,17 @@ export type ManualPaymentConfig = {
   qrUrl: string
   wechatQrUrl: string
   alipayQrUrl: string
+  bankTransfer: ManualBankTransferConfig
+}
+
+export type ManualBankTransferConfig = {
+  enabled: boolean
+  bankName: string
+  accountName: string
+  accountNumber: string
+  routingNumber: string
+  swiftCode: string
+  note: string
 }
 
 export function getPaymentMode(): PaymentMode {
@@ -19,6 +30,15 @@ export function getPaymentMode(): PaymentMode {
 export function getManualPaymentConfig(): ManualPaymentConfig {
   const wechatQrUrl = process.env.MANUAL_WECHAT_QR_URL || process.env.MANUAL_PAYMENT_QR_URL || '/payment/wechat-pay.jpg'
   const alipayQrUrl = process.env.MANUAL_ALIPAY_QR_URL || '/payment/alipay-pay.jpg'
+  const bankName = process.env.MANUAL_BANK_NAME ?? ''
+  const accountName = process.env.MANUAL_BANK_ACCOUNT_NAME ?? ''
+  const accountNumber = process.env.MANUAL_BANK_ACCOUNT_NUMBER ?? ''
+  const routingNumber = process.env.MANUAL_BANK_ROUTING_NUMBER ?? ''
+  const swiftCode = process.env.MANUAL_BANK_SWIFT_CODE ?? ''
+  const bankNote = process.env.MANUAL_BANK_NOTE ?? ''
+  const bankTransferEnabled =
+    process.env.MANUAL_BANK_TRANSFER_ENABLED === 'true' ||
+    Boolean(bankName && accountName && accountNumber)
 
   return {
     contact: process.env.MANUAL_PAYMENT_CONTACT ?? '',
@@ -26,6 +46,15 @@ export function getManualPaymentConfig(): ManualPaymentConfig {
     qrUrl: wechatQrUrl,
     wechatQrUrl,
     alipayQrUrl,
+    bankTransfer: {
+      enabled: bankTransferEnabled,
+      bankName,
+      accountName,
+      accountNumber,
+      routingNumber,
+      swiftCode,
+      note: bankNote,
+    },
   }
 }
 

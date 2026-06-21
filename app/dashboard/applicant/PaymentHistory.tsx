@@ -217,8 +217,8 @@ export default function PaymentHistory({ locale }: { locale: Locale }) {
                 {order.status === 'pending_payment' && (
                   <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">
                     {zh
-                      ? '如果你已经通过微信/支付宝付款，请等待平台人工确认。确认后订单会显示为“已付款”。'
-                      : 'If you already paid by WeChat/Alipay, please wait for manual platform confirmation. The order will show as paid after confirmation.'}
+                      ? '如果你已经通过微信/支付宝/银行转账付款，请等待平台人工确认。确认后订单会显示为“已付款”。'
+                      : 'If you already paid by WeChat, Alipay, or bank transfer, please wait for manual platform confirmation. The order will show as paid after confirmation.'}
                   </div>
                 )}
 

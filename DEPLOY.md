@@ -56,6 +56,13 @@ MANUAL_PAYMENT_CONTACT=微信/支付宝收款账号：gomentorgo
 MANUAL_PAYMENT_NOTE=付款后请备注订单号，平台会人工确认。
 MANUAL_WECHAT_QR_URL=/payment/wechat-pay.jpg
 MANUAL_ALIPAY_QR_URL=/payment/alipay-pay.jpg
+MANUAL_BANK_TRANSFER_ENABLED=false
+MANUAL_BANK_NAME=
+MANUAL_BANK_ACCOUNT_NAME=
+MANUAL_BANK_ACCOUNT_NUMBER=
+MANUAL_BANK_ROUTING_NUMBER=
+MANUAL_BANK_SWIFT_CODE=
+MANUAL_BANK_NOTE=银行转账后请备注订单号，平台会人工确认。
 STRIPE_SECRET_KEY=sk_live_...
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
 STRIPE_WEBHOOK_SECRET=whsec_...
@@ -85,8 +92,8 @@ PAYMENT_MODE=manual
 ADMIN_EMAILS=owner@example.com
 ```
 
-Students will submit bookings and see WeChat/Alipay payment instructions.
-The slot is locked immediately. An admin listed in `ADMIN_EMAILS` can visit
+Students will submit bookings and see WeChat, Alipay, or bank transfer payment
+instructions. The slot is locked immediately. An admin listed in `ADMIN_EMAILS` can visit
 `/admin` to:
 
 - confirm the student has paid manually
