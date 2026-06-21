@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useTransition, useRef } from 'react'
-import { saveAdviserProfile, uploadWritingSample } from '@/app/actions/adviser'
+import { saveAdviserProfile, uploadAdviserPayoutQr, uploadWritingSample } from '@/app/actions/adviser'
 import {
   SERVICE_CATALOG,
   LANGUAGE_OPTIONS,
@@ -111,6 +111,66 @@ function FileUploadButton({
   )
 }
 
+function PayoutQrUploadButton({
+  kind, currentUrl, onUploaded, zh,
+}: {
+  kind: 'wechat' | 'alipay'
+  currentUrl: string
+  onUploaded: (url: string) => void
+  zh: boolean
+}) {
+  const [uploading, startUpload] = useTransition()
+  const [err, setErr] = useState('')
+  const ref = useRef<HTMLInputElement>(null)
+  const label = kind === 'wechat'
+    ? (zh ? '上传微信收款码' : 'Upload WeChat Pay QR')
+    : (zh ? '上传支付宝收款码' : 'Upload Alipay QR')
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setErr('')
+    startUpload(async () => {
+      const fd = new FormData()
+      fd.set('qr', file)
+      const res = await uploadAdviserPayoutQr(kind, fd)
+      if (res.ok && res.url) onUploaded(res.url)
+      else setErr(res.error ?? (zh ? '上传失败' : 'Upload failed'))
+    })
+  }
+
+  return (
+    <div className="rounded-xl border bg-gray-50 p-4 space-y-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm font-medium">{label}</p>
+          <p className="text-xs text-gray-400 mt-0.5">
+            {zh ? '支持 JPG、PNG、WEBP，最大 5MB。学生看不到，只有平台管理员结算时可见。' : 'JPG, PNG, WEBP up to 5 MB. Hidden from students and visible only to platform admins.'}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => ref.current?.click()}
+          disabled={uploading}
+          className="rounded-xl border bg-white px-4 py-2 text-sm font-medium hover:bg-gray-100 disabled:opacity-50 transition"
+        >
+          {uploading ? (zh ? '上传中…' : 'Uploading…') : (zh ? '选择图片' : 'Choose image')}
+        </button>
+      </div>
+      {currentUrl && (
+        <div className="flex items-center gap-3">
+          <img src={currentUrl} alt={label} className="h-24 w-24 rounded-lg border bg-white object-contain" />
+          <a href={currentUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline">
+            {zh ? '查看大图 →' : 'View full size →'}
+          </a>
+        </div>
+      )}
+      {err && <p className="text-xs text-red-500">{err}</p>}
+      <input ref={ref} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleChange} />
+    </div>
+  )
+}
+
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export default function AdviserProfileEditor({ initial, locale }: Props) {
@@ -144,7 +204,9 @@ export default function AdviserProfileEditor({ initial, locale }: Props) {
   // Private payout info tab
   const [payoutAccountName, setPayoutAccountName] = useState(initial.payoutInfo.accountName ?? '')
   const [payoutWechat, setPayoutWechat]           = useState(initial.payoutInfo.wechat ?? '')
+  const [payoutWechatQrUrl, setPayoutWechatQrUrl] = useState(initial.payoutInfo.wechatQrUrl ?? '')
   const [payoutAlipay, setPayoutAlipay]           = useState(initial.payoutInfo.alipay ?? '')
+  const [payoutAlipayQrUrl, setPayoutAlipayQrUrl] = useState(initial.payoutInfo.alipayQrUrl ?? '')
   const [payoutNote, setPayoutNote]               = useState(initial.payoutInfo.note ?? '')
 
   // Services tab
@@ -216,7 +278,9 @@ export default function AdviserProfileEditor({ initial, locale }: Props) {
       fd.set('meetingLark', larkLink)
       fd.set('payoutAccountName', payoutAccountName)
       fd.set('payoutWechat', payoutWechat)
+      fd.set('payoutWechatQrUrl', payoutWechatQrUrl)
       fd.set('payoutAlipay', payoutAlipay)
+      fd.set('payoutAlipayQrUrl', payoutAlipayQrUrl)
       fd.set('payoutNote', payoutNote)
       const res = await saveAdviserProfile(fd)
       if (res.ok) { setSaved(true); setEditing(false) }
@@ -625,8 +689,8 @@ export default function AdviserProfileEditor({ initial, locale }: Props) {
         <div className="space-y-5">
           <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-xs text-amber-800">
             {zh
-              ? '这里填写的是平台给你结算时使用的收款信息。学生看不到这些信息，只有平台管理员可以在结算订单时查看。'
-              : 'This payout information is used by the platform to pay you after completed orders. Students cannot see it; only platform admins can view it when processing payouts.'}
+              ? '这里填写的是平台给你结算时使用的收款信息。建议直接上传微信/支付宝收款码；学生看不到这些信息，只有平台管理员结算订单时可以查看。'
+              : 'This payout information is used by the platform to pay you after completed orders. We recommend uploading WeChat Pay / Alipay QR codes. Students cannot see this; only platform admins can view it when processing payouts.'}
           </div>
 
           <div>
@@ -640,24 +704,39 @@ export default function AdviserProfileEditor({ initial, locale }: Props) {
             />
           </div>
 
+          <div className="grid gap-4 md:grid-cols-2">
+            <PayoutQrUploadButton
+              kind="wechat"
+              currentUrl={payoutWechatQrUrl}
+              onUploaded={setPayoutWechatQrUrl}
+              zh={zh}
+            />
+            <PayoutQrUploadButton
+              kind="alipay"
+              currentUrl={payoutAlipayQrUrl}
+              onUploaded={setPayoutAlipayQrUrl}
+              zh={zh}
+            />
+          </div>
+
           <div>
-            <label className="block text-xs text-gray-500 mb-1">{zh ? '微信收款账号' : 'WeChat payout account'}</label>
+            <label className="block text-xs text-gray-500 mb-1">{zh ? '微信收款账号（可选）' : 'WeChat payout account (optional)'}</label>
             <input
               type="text"
               value={payoutWechat}
               onChange={e => setPayoutWechat(e.target.value)}
-              placeholder={zh ? '填写微信号、手机号或收款备注' : 'WeChat ID, phone number, or payment note'}
+              placeholder={zh ? '如果已上传收款码，这里可以不填' : 'Optional if you uploaded a QR code'}
               className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black transition"
             />
           </div>
 
           <div>
-            <label className="block text-xs text-gray-500 mb-1">{zh ? '支付宝收款账号' : 'Alipay payout account'}</label>
+            <label className="block text-xs text-gray-500 mb-1">{zh ? '支付宝收款账号（可选）' : 'Alipay payout account (optional)'}</label>
             <input
               type="text"
               value={payoutAlipay}
               onChange={e => setPayoutAlipay(e.target.value)}
-              placeholder={zh ? '填写支付宝手机号 / 邮箱 / 账号' : 'Alipay phone, email, or account ID'}
+              placeholder={zh ? '如果已上传收款码，这里可以不填' : 'Optional if you uploaded a QR code'}
               className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black transition"
             />
           </div>

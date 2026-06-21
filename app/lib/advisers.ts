@@ -33,7 +33,9 @@ export type ApplicationPackage = {
 export type AdviserPayoutInfo = {
   accountName?: string
   wechat?: string
+  wechatQrUrl?: string
   alipay?: string
+  alipayQrUrl?: string
   note?: string
 }
 

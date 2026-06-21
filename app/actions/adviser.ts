@@ -4,6 +4,7 @@ import fs from 'fs/promises'
 import { getSession } from '@/app/lib/session'
 import {
   updateAdviser,
+  getAdviserById,
   SERVICE_CATALOG,
   type ServiceKey,
   type AdviserService,
@@ -39,7 +40,9 @@ export async function saveAdviserProfile(formData: FormData): Promise<SaveProfil
   const larkLink    = str('meetingLark')
   const payoutAccountName = str('payoutAccountName')
   const payoutWechat      = str('payoutWechat')
+  const payoutWechatQrUrl = str('payoutWechatQrUrl')
   const payoutAlipay      = str('payoutAlipay')
+  const payoutAlipayQrUrl = str('payoutAlipayQrUrl')
   const payoutNote        = str('payoutNote')
 
   // Validate video URL: only allow http/https
@@ -82,7 +85,9 @@ export async function saveAdviserProfile(formData: FormData): Promise<SaveProfil
   const payoutInfo = {
     accountName: payoutAccountName || undefined,
     wechat: payoutWechat || undefined,
+    wechatQrUrl: payoutWechatQrUrl || undefined,
     alipay: payoutAlipay || undefined,
+    alipayQrUrl: payoutAlipayQrUrl || undefined,
     note: payoutNote || undefined,
   }
 
@@ -102,6 +107,43 @@ export async function saveAdviserProfile(formData: FormData): Promise<SaveProfil
     updatedAt: new Date().toISOString(),
   })
   return ok ? { ok: true } : { ok: false, error: '保存失败，请重试' }
+}
+
+/** Upload an adviser payout QR code. Visible only to platform admins. */
+export async function uploadAdviserPayoutQr(
+  kind: 'wechat' | 'alipay',
+  formData: FormData,
+): Promise<SaveProfileResult & { url?: string }> {
+  const session = await getSession()
+  if (!session || session.role !== 'adviser') return { ok: false, error: '未登录' }
+  if (kind !== 'wechat' && kind !== 'alipay') return { ok: false, error: '收款码类型无效' }
+
+  const file = formData.get('qr') as File | null
+  if (!file || file.size === 0) return { ok: false, error: '请选择收款码图片' }
+  if (!ALLOWED_PHOTO_TYPES.includes(file.type))
+    return { ok: false, error: '收款码仅支持 JPG、PNG、WEBP 格式' }
+  if (file.size > 5 * 1024 * 1024)
+    return { ok: false, error: '收款码图片大小不能超过 5MB' }
+
+  const uploadDir = getUploadPath('profiles')
+  await fs.mkdir(uploadDir, { recursive: true })
+
+  const ext      = file.type === 'image/webp' ? 'webp' : file.type === 'image/png' ? 'png' : 'jpg'
+  const filename = `${session.userId}-payout-${kind}-${Date.now()}.${ext}`
+  const bytes    = Buffer.from(await file.arrayBuffer())
+  await fs.writeFile(getUploadPath('profiles', filename), bytes)
+
+  const url = getUploadPublicUrl('profiles', filename)
+  const adviser = getAdviserById(session.userId)
+  const current = adviser?.payoutInfo ?? {}
+  updateAdviser(session.userId, {
+    payoutInfo: {
+      ...current,
+      ...(kind === 'wechat' ? { wechatQrUrl: url } : { alipayQrUrl: url }),
+    },
+    updatedAt: new Date().toISOString(),
+  })
+  return { ok: true, url }
 }
 
 /** Upload a profile photo. Saves to the persistent upload store. Returns the public URL. */

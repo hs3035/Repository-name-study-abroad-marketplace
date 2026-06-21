@@ -207,7 +207,7 @@ function OrderList({
 
 function PayoutInfo({ order, zh }: { order: AdminOrder; zh: boolean }) {
   const info = order.adviserPayoutInfo
-  if (!info?.accountName && !info?.wechat && !info?.alipay && !info?.note) {
+  if (!info?.accountName && !info?.wechat && !info?.wechatQrUrl && !info?.alipay && !info?.alipayQrUrl && !info?.note) {
     return (
       <div className="rounded-lg border border-yellow-200 bg-yellow-50 px-3 py-2 text-xs text-yellow-800">
         {zh ? '导师尚未填写结算账户，请联系导师补充后再打款。' : 'The mentor has not added payout info yet. Ask them to add it before paying out.'}
@@ -221,7 +221,32 @@ function PayoutInfo({ order, zh }: { order: AdminOrder; zh: boolean }) {
       {info.accountName && <p>{zh ? '收款人：' : 'Name: '}<span className="font-medium">{info.accountName}</span></p>}
       {info.wechat && <p>{zh ? '微信：' : 'WeChat: '}<span className="font-medium break-all">{info.wechat}</span></p>}
       {info.alipay && <p>{zh ? '支付宝：' : 'Alipay: '}<span className="font-medium break-all">{info.alipay}</span></p>}
+      {(info.wechatQrUrl || info.alipayQrUrl) && (
+        <div className="flex flex-wrap gap-3 pt-1">
+          {info.wechatQrUrl && (
+            <PayoutQrPreview
+              label={zh ? '微信收款码' : 'WeChat QR'}
+              url={info.wechatQrUrl}
+            />
+          )}
+          {info.alipayQrUrl && (
+            <PayoutQrPreview
+              label={zh ? '支付宝收款码' : 'Alipay QR'}
+              url={info.alipayQrUrl}
+            />
+          )}
+        </div>
+      )}
       {info.note && <p>{zh ? '备注：' : 'Note: '}<span className="break-all">{info.note}</span></p>}
     </div>
+  )
+}
+
+function PayoutQrPreview({ label, url }: { label: string; url: string }) {
+  return (
+    <a href={url} target="_blank" rel="noopener noreferrer" className="block rounded-lg border bg-white p-2 hover:border-gray-400 transition">
+      <img src={url} alt={label} className="h-28 w-28 rounded object-contain" />
+      <p className="mt-1 text-center text-[11px] font-medium text-gray-600">{label}</p>
+    </a>
   )
 }
