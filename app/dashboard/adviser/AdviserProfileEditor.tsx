@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useTransition, useRef } from 'react'
-import { saveAdviserProfile, uploadAdviserPayoutQr, uploadWritingSample } from '@/app/actions/adviser'
+import { saveAdviserProfile, uploadAdviserPayoutQr, uploadAdviserVerificationFile, uploadWritingSample } from '@/app/actions/adviser'
 import {
   SERVICE_CATALOG,
   LANGUAGE_OPTIONS,
@@ -10,9 +10,12 @@ import {
   type ApplicationPackage,
   type AdviserPayoutInfo,
   type AdviserContactInfo,
+  type AdviserVerificationLinks,
+  type DiplomaStatus,
 } from '@/app/lib/advisers'
 
 type InitialData = {
+  email: string
   bio: string
   workExperience: string
   specialties: string
@@ -28,6 +31,9 @@ type InitialData = {
   contactInfo: AdviserContactInfo
   meetingLinks: { zoom?: string; tencent?: string; lark?: string }
   payoutInfo: AdviserPayoutInfo
+  diplomaStatus: DiplomaStatus
+  diplomaPath: string
+  verificationLinks: AdviserVerificationLinks
 }
 
 type Props = {
@@ -40,7 +46,7 @@ function newPackage(): ApplicationPackage {
   return { id: crypto.randomUUID(), level: 'master', schoolCount: 5, price: 15000, note: '' }
 }
 
-type Tab = 'about' | 'sample' | 'video' | 'services' | 'contact' | 'meeting' | 'payout'
+type Tab = 'about' | 'verification' | 'sample' | 'video' | 'services' | 'contact' | 'meeting' | 'payout'
 
 // ── Embed helpers ──────────────────────────────────────────────────────────────
 
@@ -58,7 +64,7 @@ function getEmbedUrl(url: string): string | null {
 // ── FileUploadButton — shared upload row ──────────────────────────────────────
 
 function FileUploadButton({
-  label, accept, hint, currentUrl, onUpload, zh,
+  label, accept, hint, currentUrl, onUpload, zh, fieldName: fieldNameProp,
 }: {
   label: string
   accept: string
@@ -66,6 +72,7 @@ function FileUploadButton({
   currentUrl: string
   onUpload: (fd: FormData) => Promise<{ ok: boolean; url?: string; error?: string }>
   zh: boolean
+  fieldName?: string
 }) {
   const [uploading, startUpload] = useTransition()
   const [err, setErr] = useState('')
@@ -79,7 +86,7 @@ function FileUploadButton({
     startUpload(async () => {
       const fd = new FormData()
       // The field name is derived: "photo" for photos, "sample" for writing samples
-      const fieldName = accept.startsWith('image') ? 'photo' : 'sample'
+      const fieldName = fieldNameProp ?? (accept.startsWith('image') ? 'photo' : 'sample')
       fd.set(fieldName, file)
       const res = await onUpload(fd)
       if (res.ok && res.url) setUrl(res.url)
@@ -187,6 +194,15 @@ export default function AdviserProfileEditor({ initial, locale }: Props) {
   const [specialties, setSpecialties]       = useState(initial.specialties)
   const [successStories, setSuccessStories] = useState(initial.successStories)
 
+  // Verification tab
+  const [diplomaStatus, setDiplomaStatus] = useState<DiplomaStatus>(initial.diplomaStatus)
+  const [diplomaPath, setDiplomaPath] = useState(initial.diplomaPath)
+  const [verificationPersonalHomepage, setVerificationPersonalHomepage] = useState(initial.verificationLinks.personalHomepage ?? '')
+  const [verificationProjectHomepage, setVerificationProjectHomepage]   = useState(initial.verificationLinks.projectHomepage ?? '')
+  const [verificationLinkedin, setVerificationLinkedin]                 = useState(initial.verificationLinks.linkedin ?? '')
+  const [verificationGoogleScholar, setVerificationGoogleScholar]       = useState(initial.verificationLinks.googleScholar ?? '')
+  const [verificationNote, setVerificationNote]                         = useState(initial.verificationLinks.note ?? '')
+
   // Writing sample tab
   const [sampleMode, setSampleMode]           = useState<'text' | 'file'>(
     initial.writingSampleFileUrl ? 'file' : 'text',
@@ -275,6 +291,11 @@ export default function AdviserProfileEditor({ initial, locale }: Props) {
       fd.set('writingSampleTitle', writingSampleTitle)
       fd.set('writingSampleText', sampleMode === 'text' ? writingSampleText : '')
       fd.set('videoIntroUrl', videoIntroUrl)
+      fd.set('verificationPersonalHomepage', verificationPersonalHomepage)
+      fd.set('verificationProjectHomepage', verificationProjectHomepage)
+      fd.set('verificationLinkedin', verificationLinkedin)
+      fd.set('verificationGoogleScholar', verificationGoogleScholar)
+      fd.set('verificationNote', verificationNote)
       languages.forEach(l => fd.append('languages', l))
       for (const svc of SERVICE_CATALOG) {
         const s = services[svc.key]
@@ -307,6 +328,21 @@ export default function AdviserProfileEditor({ initial, locale }: Props) {
   }
 
   const activeServices = SERVICE_CATALOG.filter(s => services[s.key]?.enabled)
+  const isEduEmail = initial.email.toLowerCase().endsWith('.edu')
+  const verificationLabel =
+    diplomaStatus === 'verified'
+      ? (zh ? '已验证' : 'Verified')
+      : diplomaStatus === 'pending'
+        ? (zh ? '待平台审核' : 'Pending review')
+        : isEduEmail
+          ? (zh ? 'edu 邮箱已验证' : 'Edu email verified')
+          : (zh ? '未提交验证' : 'Not submitted')
+  const verificationTone =
+    diplomaStatus === 'verified' || isEduEmail
+      ? 'bg-green-50 text-green-700 border-green-200'
+      : diplomaStatus === 'pending'
+        ? 'bg-amber-50 text-amber-700 border-amber-200'
+        : 'bg-gray-50 text-gray-500 border-gray-200'
 
   // ── view mode ────────────────────────────────────────────────────────────────
   if (!editing) {
@@ -363,6 +399,18 @@ export default function AdviserProfileEditor({ initial, locale }: Props) {
           <p className="text-sm text-gray-400">{zh ? '暂未设置服务项目' : 'No services set yet'}</p>
         )}
 
+        <div className={`rounded-xl border px-4 py-3 text-sm ${verificationTone}`}>
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+            <span className="font-medium">{zh ? '身份验证' : 'Identity verification'}</span>
+            <span>{verificationLabel}</span>
+          </div>
+          {diplomaStatus === 'pending' && (
+            <p className="mt-1 text-xs opacity-80">
+              {zh ? '平台会根据你上传的证明文件或主页链接进行审核。' : 'The platform will review your proof file or profile links.'}
+            </p>
+          )}
+        </div>
+
         {saved && <p className="text-xs text-green-600">✓ {zh ? '已保存' : 'Saved'}</p>}
 
         <button
@@ -378,6 +426,7 @@ export default function AdviserProfileEditor({ initial, locale }: Props) {
   // ── edit mode ────────────────────────────────────────────────────────────────
   const TABS: { id: Tab; zh: string; en: string }[] = [
     { id: 'about',    zh: '关于我',      en: 'About' },
+    { id: 'verification', zh: '身份验证', en: 'Verification' },
     { id: 'sample',   zh: '写作样本',    en: 'Writing Sample' },
     { id: 'video',    zh: '视频介绍',    en: 'Video Intro' },
     { id: 'services', zh: '服务 & 价格', en: 'Services' },
@@ -432,6 +481,98 @@ export default function AdviserProfileEditor({ initial, locale }: Props) {
             <textarea rows={4} value={successStories} onChange={e => setSuccessStories(e.target.value)}
               placeholder={zh ? '如：帮助3位学生成功录取 CMU/Stanford/MIT，其中2位获得全额奖学金…' : 'e.g. Helped 3 students get admitted to CMU/Stanford/MIT, 2 with full scholarships…'}
               className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black transition resize-none" />
+          </div>
+        </div>
+      )}
+
+      {/* ── Tab: Verification ────────────────────────────────────────────── */}
+      {activeTab === 'verification' && (
+        <div className="space-y-5">
+          <div className={`rounded-xl border px-4 py-3 text-sm ${verificationTone}`}>
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="font-semibold">{zh ? '当前验证状态' : 'Current verification status'}</p>
+                <p className="mt-0.5 text-xs opacity-80">{initial.email}</p>
+              </div>
+              <span className="font-semibold">{verificationLabel}</span>
+            </div>
+          </div>
+
+          <div className="rounded-xl bg-blue-50 border border-blue-100 px-4 py-3 text-xs leading-relaxed text-blue-700">
+            {zh
+              ? '如果你使用 .edu 邮箱注册，通常可以通过邮箱验证身份。如果不是 edu 邮箱，你可以上传毕业证、学生证、在读证明、录取证明，或填写个人主页、项目主页、实验室主页等信息，平台会人工审核。'
+              : 'If you registered with a .edu email, email verification is usually enough. If not, upload proof such as a diploma, student ID, enrollment/admission proof, or add a personal/project/lab homepage for manual platform review.'}
+          </div>
+
+          <FileUploadButton
+            label={zh ? '上传身份/学历证明文件' : 'Upload identity / education proof'}
+            accept="application/pdf,image/jpeg,image/png,image/webp"
+            hint={zh ? '支持 PDF、JPG、PNG、WEBP，最大 10MB。文件仅供平台审核，学生不可见。' : 'PDF, JPG, PNG, WEBP up to 10 MB. Visible only to platform admins, not students.'}
+            currentUrl={diplomaPath}
+            fieldName="verification"
+            onUpload={async fd => {
+              const res = await uploadAdviserVerificationFile(fd)
+              if (res.ok && res.url) {
+                setDiplomaPath(res.url)
+                setDiplomaStatus('pending')
+              }
+              return res
+            }}
+            zh={zh}
+          />
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">{zh ? '个人主页 / 个人网站' : 'Personal homepage'}</label>
+              <input
+                type="url"
+                value={verificationPersonalHomepage}
+                onChange={e => setVerificationPersonalHomepage(e.target.value)}
+                placeholder="https://..."
+                className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black transition"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">{zh ? '项目 / 实验室主页' : 'Project / lab homepage'}</label>
+              <input
+                type="url"
+                value={verificationProjectHomepage}
+                onChange={e => setVerificationProjectHomepage(e.target.value)}
+                placeholder="https://..."
+                className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black transition"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">LinkedIn</label>
+              <input
+                type="url"
+                value={verificationLinkedin}
+                onChange={e => setVerificationLinkedin(e.target.value)}
+                placeholder="https://www.linkedin.com/in/..."
+                className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black transition"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Google Scholar</label>
+              <input
+                type="url"
+                value={verificationGoogleScholar}
+                onChange={e => setVerificationGoogleScholar(e.target.value)}
+                placeholder="https://scholar.google.com/..."
+                className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black transition"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">{zh ? '补充说明（可选）' : 'Additional note (optional)'}</label>
+            <textarea
+              rows={3}
+              value={verificationNote}
+              onChange={e => setVerificationNote(e.target.value)}
+              placeholder={zh ? '如：我目前在某实验室做RA，个人主页正在更新；可通过项目主页确认我的身份。' : 'e.g. I am currently an RA in this lab; my personal homepage is being updated, but my project page confirms my role.'}
+              className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black transition resize-none"
+            />
           </div>
         </div>
       )}

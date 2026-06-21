@@ -20,6 +20,16 @@ const ALLOWED_SAMPLE_TYPES = [
   'application/msword',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 ]
+const ALLOWED_VERIFICATION_TYPES = [
+  'application/pdf',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+]
+
+function isHttpUrl(value: string): boolean {
+  return value.startsWith('http://') || value.startsWith('https://')
+}
 
 export async function saveAdviserProfile(formData: FormData): Promise<SaveProfileResult> {
   const session = await getSession()
@@ -34,6 +44,11 @@ export async function saveAdviserProfile(formData: FormData): Promise<SaveProfil
   const videoIntroUrl  = str('videoIntroUrl')
   const writingSampleTitle = str('writingSampleTitle')
   const writingSampleText  = str('writingSampleText')
+  const verificationPersonalHomepage = str('verificationPersonalHomepage')
+  const verificationProjectHomepage  = str('verificationProjectHomepage')
+  const verificationLinkedin         = str('verificationLinkedin')
+  const verificationGoogleScholar    = str('verificationGoogleScholar')
+  const verificationNote             = str('verificationNote')
 
   const contactWechat = str('contactWechat')
   const contactEmail  = str('contactEmail')
@@ -54,15 +69,25 @@ export async function saveAdviserProfile(formData: FormData): Promise<SaveProfil
   const payoutNote        = str('payoutNote')
 
   // Validate video URL: only allow http/https
-  if (videoIntroUrl && !videoIntroUrl.startsWith('http')) {
+  if (videoIntroUrl && !isHttpUrl(videoIntroUrl)) {
     return { ok: false, error: '视频链接必须以 http 或 https 开头' }
   }
   if (contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) {
     return { ok: false, error: '联系邮箱格式不正确' }
   }
   for (const [label, link] of [['Zoom', zoomLink], ['腾讯会议', tencentLink], ['飞书', larkLink]] as const) {
-    if (link && !link.startsWith('http')) {
+    if (link && !isHttpUrl(link)) {
       return { ok: false, error: `${label} 链接必须以 http 或 https 开头` }
+    }
+  }
+  for (const [label, link] of [
+    ['个人主页', verificationPersonalHomepage],
+    ['项目/实验室主页', verificationProjectHomepage],
+    ['LinkedIn', verificationLinkedin],
+    ['Google Scholar', verificationGoogleScholar],
+  ] as const) {
+    if (link && !isHttpUrl(link)) {
+      return { ok: false, error: `${label}链接必须以 http 或 https 开头` }
     }
   }
 
@@ -112,6 +137,14 @@ export async function saveAdviserProfile(formData: FormData): Promise<SaveProfil
     note: payoutNote || undefined,
   }
 
+  const verificationLinks = {
+    personalHomepage: verificationPersonalHomepage || undefined,
+    projectHomepage: verificationProjectHomepage || undefined,
+    linkedin: verificationLinkedin || undefined,
+    googleScholar: verificationGoogleScholar || undefined,
+    note: verificationNote || undefined,
+  }
+
   const ok = updateAdviser(session.userId, {
     bio,
     workExperience,
@@ -126,9 +159,48 @@ export async function saveAdviserProfile(formData: FormData): Promise<SaveProfil
     contactInfo,
     meetingLinks,
     payoutInfo,
+    verificationLinks,
     updatedAt: new Date().toISOString(),
   })
   return ok ? { ok: true } : { ok: false, error: '保存失败，请重试' }
+}
+
+/** Upload adviser verification proof. Visible only to platform admins. */
+export async function uploadAdviserVerificationFile(
+  formData: FormData,
+): Promise<SaveProfileResult & { url?: string }> {
+  const session = await getSession()
+  if (!session || session.role !== 'adviser') return { ok: false, error: '未登录' }
+
+  const file = formData.get('verification') as File | null
+  if (!file || file.size === 0) return { ok: false, error: '请选择证明文件' }
+  if (!ALLOWED_VERIFICATION_TYPES.includes(file.type))
+    return { ok: false, error: '仅支持 PDF、JPG、PNG、WEBP 格式' }
+  if (file.size > 10 * 1024 * 1024)
+    return { ok: false, error: '证明文件大小不能超过 10MB' }
+
+  const uploadDir = getUploadPath('diplomas')
+  await fs.mkdir(uploadDir, { recursive: true })
+
+  const extMap: Record<string, string> = {
+    'application/pdf': 'pdf',
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'image/webp': 'webp',
+  }
+  const ext      = extMap[file.type] ?? 'pdf'
+  const filename = `${session.userId}-verification-${Date.now()}.${ext}`
+  const bytes    = Buffer.from(await file.arrayBuffer())
+
+  await fs.writeFile(getUploadPath('diplomas', filename), bytes)
+
+  const url = getUploadPublicUrl('diplomas', filename)
+  updateAdviser(session.userId, {
+    diplomaPath: url,
+    diplomaStatus: 'pending',
+    updatedAt: new Date().toISOString(),
+  })
+  return { ok: true, url }
 }
 
 /** Upload an adviser payout QR code. Visible only to platform admins. */

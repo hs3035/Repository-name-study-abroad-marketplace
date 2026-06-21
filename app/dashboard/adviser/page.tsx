@@ -16,6 +16,7 @@ function computeCompletion(adviser: ReturnType<typeof getAdviserById>) {
   if (!adviser) return { pct: 0, items: [] }
   const items = [
     { label_zh: '已填写自我介绍',   label_en: 'Bio filled in',         done: !!adviser.bio?.trim() },
+    { label_zh: '已提交身份验证',   label_en: 'Verification submitted', done: adviser.emailVerified || adviser.diplomaStatus === 'pending' || adviser.diplomaStatus === 'verified' || !!(adviser.verificationLinks?.personalHomepage?.trim() || adviser.verificationLinks?.projectHomepage?.trim() || adviser.verificationLinks?.linkedin?.trim() || adviser.verificationLinks?.googleScholar?.trim()) },
     { label_zh: '已上传头像',        label_en: 'Profile photo uploaded', done: !!adviser.profilePhotoUrl },
     { label_zh: '已添加写作样本',    label_en: 'Writing sample added',   done: !!(adviser.writingSampleText?.trim() || adviser.writingSampleFileUrl) },
     { label_zh: '已添加视频介绍',    label_en: 'Video intro added',      done: !!adviser.videoIntroUrl?.trim() },
@@ -128,6 +129,7 @@ export default async function AdviserDashboard() {
             adviserId={adviser.id}
             locale={locale}
             initial={{
+              email:                adviser.email,
               bio:                  adviser.bio ?? '',
               workExperience:       adviser.workExperience ?? '',
               specialties:          adviser.specialties ?? '',
@@ -143,6 +145,9 @@ export default async function AdviserDashboard() {
               contactInfo:          adviser.contactInfo ?? {},
               meetingLinks:         adviser.meetingLinks ?? {},
               payoutInfo:           adviser.payoutInfo ?? {},
+              diplomaStatus:        adviser.diplomaStatus,
+              diplomaPath:          adviser.diplomaPath ?? '',
+              verificationLinks:    adviser.verificationLinks ?? {},
             }}
           />
         </div>

@@ -49,6 +49,14 @@ export type AdviserContactInfo = {
   note?: string
 }
 
+export type AdviserVerificationLinks = {
+  personalHomepage?: string
+  projectHomepage?: string
+  linkedin?: string
+  googleScholar?: string
+  note?: string
+}
+
 export const LANGUAGE_OPTIONS = [
   { value: '中文',    en: 'Chinese'  },
   { value: 'English', en: 'English'  },
@@ -82,6 +90,7 @@ export type Adviser = {
   emailVerified: boolean
   diplomaStatus: DiplomaStatus
   diplomaPath?: string
+  verificationLinks?: AdviserVerificationLinks
   /** Stripe Connect Express account ID, set after onboarding */
   stripeAccountId?: string
   // Extended profile fields
@@ -105,8 +114,8 @@ export type Adviser = {
   updatedAt?: string
 }
 
-/** Public adviser type — strips private auth/payment/contact fields, adds readiness flags */
-export type PublicAdviser = Omit<Adviser, 'password' | 'stripeAccountId' | 'payoutInfo' | 'meetingLinks' | 'contactInfo'> & {
+/** Public adviser type — strips private auth/payment/contact/verification fields, adds readiness flags */
+export type PublicAdviser = Omit<Adviser, 'password' | 'stripeAccountId' | 'payoutInfo' | 'meetingLinks' | 'contactInfo' | 'diplomaPath' | 'verificationLinks'> & {
   stripeReady: boolean
   bookingReady: boolean
 }
@@ -148,6 +157,8 @@ function toPublic(adviser: Adviser): PublicAdviser {
   delete (rest as Partial<Adviser>).payoutInfo
   delete (rest as Partial<Adviser>).meetingLinks
   delete (rest as Partial<Adviser>).contactInfo
+  delete (rest as Partial<Adviser>).diplomaPath
+  delete (rest as Partial<Adviser>).verificationLinks
   return {
     ...rest,
     stripeReady: !!adviser.stripeAccountId,
