@@ -207,7 +207,17 @@ function OrderList({
 
 function PayoutInfo({ order, zh }: { order: AdminOrder; zh: boolean }) {
   const info = order.adviserPayoutInfo
-  if (!info?.accountName && !info?.wechat && !info?.wechatQrUrl && !info?.alipay && !info?.alipayQrUrl && !info?.note) {
+  if (
+    !info?.accountName &&
+    !info?.wechat &&
+    !info?.wechatQrUrl &&
+    !info?.alipay &&
+    !info?.alipayQrUrl &&
+    !info?.bankName &&
+    !info?.bankAccountNumber &&
+    !info?.bankBranch &&
+    !info?.note
+  ) {
     return (
       <div className="rounded-lg border border-yellow-200 bg-yellow-50 px-3 py-2 text-xs text-yellow-800">
         {zh ? '导师尚未填写结算账户，请联系导师补充后再打款。' : 'The mentor has not added payout info yet. Ask them to add it before paying out.'}
@@ -221,6 +231,14 @@ function PayoutInfo({ order, zh }: { order: AdminOrder; zh: boolean }) {
       {info.accountName && <p>{zh ? '收款人：' : 'Name: '}<span className="font-medium">{info.accountName}</span></p>}
       {info.wechat && <p>{zh ? '微信：' : 'WeChat: '}<span className="font-medium break-all">{info.wechat}</span></p>}
       {info.alipay && <p>{zh ? '支付宝：' : 'Alipay: '}<span className="font-medium break-all">{info.alipay}</span></p>}
+      {(info.bankName || info.bankAccountNumber || info.bankBranch) && (
+        <div className="rounded-md border bg-white px-2 py-1.5 space-y-0.5">
+          <p className="font-medium text-gray-800">{zh ? '银行卡 / 银行转账' : 'Bank transfer'}</p>
+          {info.bankName && <p>{zh ? '银行：' : 'Bank: '}<span className="font-medium break-all">{info.bankName}</span></p>}
+          {info.bankAccountNumber && <p>{zh ? '账号：' : 'Account: '}<span className="font-medium break-all">{info.bankAccountNumber}</span></p>}
+          {info.bankBranch && <p>{zh ? '开户行：' : 'Branch: '}<span className="break-all">{info.bankBranch}</span></p>}
+        </div>
+      )}
       {(info.wechatQrUrl || info.alipayQrUrl) && (
         <div className="flex flex-wrap gap-3 pt-1">
           {info.wechatQrUrl && (

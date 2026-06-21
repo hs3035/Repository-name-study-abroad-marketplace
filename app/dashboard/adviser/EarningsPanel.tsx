@@ -302,8 +302,8 @@ export default function EarningsPanel({ locale, paymentMode }: { locale: Locale;
             </p>
             <p className="text-xs mt-0.5 text-green-600">
               {zh
-                ? '请在「档案」里的「结算账户」填写你的微信/支付宝账号。平台确认学生付款和服务完成后，会按系统算好的金额结算给你。'
-                : 'Add your WeChat Pay or Alipay payout details in Profile → Payout Account. After payment and service confirmation, the platform settles the calculated amount to you.'}
+                ? '请在「档案」里的「结算账户」填写你的微信、支付宝或银行卡信息。平台确认学生付款和服务完成后，会按系统算好的金额结算给你。'
+                : 'Add your WeChat Pay, Alipay, or bank transfer payout details in Profile → Payout Account. After payment and service confirmation, the platform settles the calculated amount to you.'}
             </p>
           </div>
           <button

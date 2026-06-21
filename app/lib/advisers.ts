@@ -36,6 +36,9 @@ export type AdviserPayoutInfo = {
   wechatQrUrl?: string
   alipay?: string
   alipayQrUrl?: string
+  bankName?: string
+  bankAccountNumber?: string
+  bankBranch?: string
   note?: string
 }
 

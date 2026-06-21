@@ -207,6 +207,9 @@ export default function AdviserProfileEditor({ initial, locale }: Props) {
   const [payoutWechatQrUrl, setPayoutWechatQrUrl] = useState(initial.payoutInfo.wechatQrUrl ?? '')
   const [payoutAlipay, setPayoutAlipay]           = useState(initial.payoutInfo.alipay ?? '')
   const [payoutAlipayQrUrl, setPayoutAlipayQrUrl] = useState(initial.payoutInfo.alipayQrUrl ?? '')
+  const [payoutBankName, setPayoutBankName]       = useState(initial.payoutInfo.bankName ?? '')
+  const [payoutBankAccountNumber, setPayoutBankAccountNumber] = useState(initial.payoutInfo.bankAccountNumber ?? '')
+  const [payoutBankBranch, setPayoutBankBranch]   = useState(initial.payoutInfo.bankBranch ?? '')
   const [payoutNote, setPayoutNote]               = useState(initial.payoutInfo.note ?? '')
 
   // Services tab
@@ -281,6 +284,9 @@ export default function AdviserProfileEditor({ initial, locale }: Props) {
       fd.set('payoutWechatQrUrl', payoutWechatQrUrl)
       fd.set('payoutAlipay', payoutAlipay)
       fd.set('payoutAlipayQrUrl', payoutAlipayQrUrl)
+      fd.set('payoutBankName', payoutBankName)
+      fd.set('payoutBankAccountNumber', payoutBankAccountNumber)
+      fd.set('payoutBankBranch', payoutBankBranch)
       fd.set('payoutNote', payoutNote)
       const res = await saveAdviserProfile(fd)
       if (res.ok) { setSaved(true); setEditing(false) }
@@ -689,8 +695,8 @@ export default function AdviserProfileEditor({ initial, locale }: Props) {
         <div className="space-y-5">
           <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-xs text-amber-800">
             {zh
-              ? '这里填写的是平台给你结算时使用的收款信息。建议直接上传微信/支付宝收款码；学生看不到这些信息，只有平台管理员结算订单时可以查看。'
-              : 'This payout information is used by the platform to pay you after completed orders. We recommend uploading WeChat Pay / Alipay QR codes. Students cannot see this; only platform admins can view it when processing payouts.'}
+              ? '这里填写的是平台给你结算时使用的收款信息。你可以同时填写微信、支付宝、银行卡三种方式；学生看不到这些信息，只有平台管理员结算订单时可以查看。'
+              : 'This payout information is used by the platform to pay you after completed orders. You can add WeChat, Alipay, and bank transfer details. Students cannot see this; only platform admins can view it when processing payouts.'}
           </div>
 
           <div>
@@ -741,13 +747,56 @@ export default function AdviserProfileEditor({ initial, locale }: Props) {
             />
           </div>
 
+          <div className="rounded-2xl border bg-gray-50 p-4 space-y-4">
+            <div>
+              <p className="text-sm font-semibold text-gray-900">{zh ? '银行卡收款（可选）' : 'Bank transfer payout (optional)'}</p>
+              <p className="mt-1 text-xs text-gray-500">
+                {zh
+                  ? '如果你希望平台通过银行转账结算，可以填写银行卡信息。建议至少填写银行名称、收款人和银行卡号。'
+                  : 'If you want the platform to pay you by bank transfer, add your bank details. Bank name, account holder, and account number are recommended.'}
+              </p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">{zh ? '银行名称' : 'Bank name'}</label>
+                <input
+                  type="text"
+                  value={payoutBankName}
+                  onChange={e => setPayoutBankName(e.target.value)}
+                  placeholder={zh ? '如：中国银行 / 招商银行' : 'e.g. Bank of China / Chase'}
+                  className="w-full rounded-xl border bg-white px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black transition"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">{zh ? '银行卡号 / 银行账号' : 'Bank account number'}</label>
+                <input
+                  type="text"
+                  value={payoutBankAccountNumber}
+                  onChange={e => setPayoutBankAccountNumber(e.target.value)}
+                  placeholder={zh ? '仅平台管理员可见' : 'Visible only to platform admins'}
+                  className="w-full rounded-xl border bg-white px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black transition"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">{zh ? '开户行 / 支行（可选）' : 'Branch / routing note (optional)'}</label>
+              <input
+                type="text"
+                value={payoutBankBranch}
+                onChange={e => setPayoutBankBranch(e.target.value)}
+                placeholder={zh ? '如：中国银行上海徐汇支行' : 'e.g. branch name, routing note, or transfer instruction'}
+                className="w-full rounded-xl border bg-white px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black transition"
+              />
+            </div>
+          </div>
+
           <div>
             <label className="block text-xs text-gray-500 mb-1">{zh ? '结算备注（可选）' : 'Payout note (optional)'}</label>
             <textarea
               rows={3}
               value={payoutNote}
               onChange={e => setPayoutNote(e.target.value)}
-              placeholder={zh ? '如：优先支付宝；每周五统一结算；请备注 GoMentorGo 咨询费等' : 'e.g. Prefer Alipay; weekly payout preferred; include GoMentorGo consultation fee in note'}
+              placeholder={zh ? '如：优先支付宝；也可以银行卡；每周五统一结算；请备注 GoMentorGo 咨询费等' : 'e.g. Prefer Alipay; bank transfer also works; weekly payout preferred; include GoMentorGo consultation fee in note'}
               className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black transition resize-none"
             />
           </div>

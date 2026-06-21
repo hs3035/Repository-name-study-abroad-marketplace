@@ -43,6 +43,9 @@ export async function saveAdviserProfile(formData: FormData): Promise<SaveProfil
   const payoutWechatQrUrl = str('payoutWechatQrUrl')
   const payoutAlipay      = str('payoutAlipay')
   const payoutAlipayQrUrl = str('payoutAlipayQrUrl')
+  const payoutBankName    = str('payoutBankName')
+  const payoutBankAccountNumber = str('payoutBankAccountNumber')
+  const payoutBankBranch  = str('payoutBankBranch')
   const payoutNote        = str('payoutNote')
 
   // Validate video URL: only allow http/https
@@ -88,6 +91,9 @@ export async function saveAdviserProfile(formData: FormData): Promise<SaveProfil
     wechatQrUrl: payoutWechatQrUrl || undefined,
     alipay: payoutAlipay || undefined,
     alipayQrUrl: payoutAlipayQrUrl || undefined,
+    bankName: payoutBankName || undefined,
+    bankAccountNumber: payoutBankAccountNumber || undefined,
+    bankBranch: payoutBankBranch || undefined,
     note: payoutNote || undefined,
   }
 
