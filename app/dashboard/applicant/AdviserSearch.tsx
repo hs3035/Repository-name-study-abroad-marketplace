@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import Link from 'next/link'
 import type { PublicAdviser } from '@/app/lib/advisers'
 import { SERVICE_CATALOG } from '@/app/lib/advisers'
 import type { Locale } from '@/app/lib/i18n'
@@ -39,7 +40,12 @@ function AdviserCard({ adviser, summary, reviews, completedCount, locale, onBook
       <div className="p-5 flex flex-col gap-3 flex-1">
         <div className="flex items-start justify-between">
           <div>
-            <h3 className="font-semibold text-base">{adviser.name}</h3>
+            <Link
+              href={`/advisers/${adviser.id}`}
+              className="font-semibold text-base hover:underline"
+            >
+              {adviser.name}
+            </Link>
             <p className="text-sm text-gray-500 mt-0.5">{adviser.school}</p>
             <StarDisplay average={summary.average} count={summary.count} zh={zh} />
             {completedCount > 0 && (
@@ -142,9 +148,12 @@ function AdviserCard({ adviser, summary, reviews, completedCount, locale, onBook
       )}
 
       <div className="px-5 pb-5 flex gap-2">
-        <button className="flex-1 rounded-xl border py-2 text-sm font-medium hover:bg-gray-50 transition">
+        <Link
+          href={`/advisers/${adviser.id}`}
+          className="flex-1 rounded-xl border py-2 text-center text-sm font-medium hover:bg-gray-50 transition"
+        >
           {ad.contact}
-        </button>
+        </Link>
         <button
           onClick={adviser.bookingReady ? onBook : undefined}
           disabled={!adviser.bookingReady}

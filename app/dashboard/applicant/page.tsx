@@ -56,13 +56,23 @@ export default async function ApplicantDashboard() {
         />
       </section>
 
-      {/* Adviser search */}
-      <AdviserSearch advisers={advisers} reviewSummaries={reviewSummaries} reviewsByAdviser={reviewsByAdviser} completedCounts={completedCounts} paymentMode={paymentMode} locale={locale} />
-
       {/* Payment history */}
       <section className="bg-white rounded-2xl border p-6">
         <h2 className="text-lg font-semibold mb-4">{locale === 'zh' ? '我的支付记录' : 'My Payments'}</h2>
         <PaymentHistory locale={locale} />
+      </section>
+
+      {/* Adviser search */}
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-lg font-semibold">{locale === 'zh' ? '寻找更多导师' : 'Find More Mentors'}</h2>
+          <p className="mt-1 text-sm text-gray-500">
+            {locale === 'zh'
+              ? '可以继续筛选其他导师，查看主页、评价和可预约时间。'
+              : 'Search other mentors, view profiles, reviews, and availability.'}
+          </p>
+        </div>
+        <AdviserSearch advisers={advisers} reviewSummaries={reviewSummaries} reviewsByAdviser={reviewsByAdviser} completedCounts={completedCounts} paymentMode={paymentMode} locale={locale} />
       </section>
 
       <section className="bg-white rounded-2xl border p-6">

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useTransition } from 'react'
+import Link from 'next/link'
 import { fetchApplicantOrders, studentConfirmComplete, studentRequestRefund } from '@/app/actions/payments'
 import { submitReview, fetchOrderReviewStatus } from '@/app/actions/reviews'
 import { fetchMeetingDetailsForAdvisers, type AdviserMeetingDetails } from '@/app/actions/meetings'
@@ -210,7 +211,13 @@ export default function PaymentHistory({ locale }: { locale: Locale }) {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-medium">
-                      {zh ? `导师：${order.adviserName}` : `Mentor: ${order.adviserName}`}
+                      <span>{zh ? '导师：' : 'Mentor: '}</span>
+                      <Link
+                        href={`/advisers/${order.adviserId}`}
+                        className="text-blue-700 hover:underline"
+                      >
+                        {order.adviserName}
+                      </Link>
                     </p>
                     <p className="text-xs text-gray-400 mt-0.5">{slotDate}</p>
                   </div>
