@@ -18,7 +18,7 @@ export function getManualPaymentConfig(): ManualPaymentConfig {
   return {
     contact: process.env.MANUAL_PAYMENT_CONTACT ?? '',
     note: process.env.MANUAL_PAYMENT_NOTE ?? '',
-    qrUrl: process.env.MANUAL_PAYMENT_QR_URL ?? '',
+    qrUrl: process.env.MANUAL_PAYMENT_QR_URL || '/payment/wechat-pay.jpg',
   }
 }
 
