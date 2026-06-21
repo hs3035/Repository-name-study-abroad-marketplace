@@ -76,6 +76,14 @@ const STATUS_LABEL: Record<Order['status'], { zh: string; en: string; color: str
   refunded:             { zh: '已退款',     en: 'Refunded',            color: 'text-gray-500 bg-gray-50 border-gray-200'       },
 }
 
+const MEETING_VISIBLE_STATUSES: Order['status'][] = [
+  'paid',
+  'in_progress',
+  'completed_by_adviser',
+  'confirmed',
+  'released',
+]
+
 function formatDatetime(iso: string, zh: boolean) {
   return new Date(iso).toLocaleString(zh ? 'zh-CN' : 'en-US', {
     month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
@@ -124,7 +132,7 @@ export default function PaymentHistory({ locale }: { locale: Locale }) {
     }
     const activeAdviserIds = [...new Set(
       ords
-        .filter(o => o.status === 'paid' || o.status === 'in_progress')
+        .filter(o => MEETING_VISIBLE_STATUSES.includes(o.status))
         .map(o => o.adviserId)
     )]
     if (activeAdviserIds.length > 0) {
@@ -222,28 +230,48 @@ export default function PaymentHistory({ locale }: { locale: Locale }) {
                   </div>
                 )}
 
-                {/* Meeting links — shown when order is paid or in progress */}
-                {(order.status === 'paid' || order.status === 'in_progress') && (() => {
+                {/* Meeting details — visible after payment is confirmed */}
+                {MEETING_VISIBLE_STATUSES.includes(order.status) && (() => {
                   const links = meetingLinks[order.adviserId]
                   const entries = links ? [
                     { key: 'zoom',    label: 'Zoom',                            icon: '🖥️', url: links.zoom },
                     { key: 'tencent', label: zh ? '腾讯会议 / VooV' : 'Tencent / VooV', icon: '🇨🇳', url: links.tencent },
                     { key: 'lark',    label: zh ? '飞书 / Lark' : 'Feishu / Lark',      icon: '🪶', url: links.lark },
                   ].filter(e => e.url) : []
-                  if (entries.length === 0) return null
                   return (
-                    <div className="rounded-lg bg-gray-50 border px-3 py-3 space-y-2">
-                      <p className="text-xs font-medium text-gray-600">
-                        {zh ? '会议链接（选择适合你的工具）' : 'Meeting links — choose what works for you'}
+                    <div className={`rounded-lg border px-3 py-3 space-y-2 ${
+                      entries.length > 0
+                        ? 'bg-green-50 border-green-200'
+                        : 'bg-amber-50 border-amber-200'
+                    }`}>
+                      <p className={`text-xs font-semibold ${
+                        entries.length > 0 ? 'text-green-800' : 'text-amber-800'
+                      }`}>
+                        {zh ? '咨询方式 / 会议链接' : 'Meeting details'}
                       </p>
-                      <div className="flex flex-wrap gap-2">
-                        {entries.map(e => (
-                          <a key={e.key} href={e.url} target="_blank" rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium hover:bg-white transition">
-                            <span>{e.icon}</span>{e.label}
-                          </a>
-                        ))}
-                      </div>
+                      {entries.length > 0 ? (
+                        <>
+                          <p className="text-xs text-gray-600 leading-relaxed">
+                            {zh
+                              ? '请选择适合你的工具进入会议。中国大陆学生建议优先使用腾讯会议或飞书；Zoom 可能需要合适的网络环境。'
+                              : 'Choose the tool that works best for you. Tencent/VooV or Lark are usually smoother for students in China; Zoom may require a compatible network.'}
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {entries.map(e => (
+                              <a key={e.key} href={e.url} target="_blank" rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 rounded-lg border bg-white px-3 py-1.5 text-xs font-medium hover:bg-gray-50 transition">
+                                <span>{e.icon}</span>{e.label}
+                              </a>
+                            ))}
+                          </div>
+                        </>
+                      ) : (
+                        <p className="text-xs text-amber-800 leading-relaxed">
+                          {zh
+                            ? '导师暂未填写会议链接。你的预约已经锁定，请等待导师更新 Zoom / 腾讯会议 / 飞书链接；如果临近预约时间仍未看到链接，请联系平台客服协助安排。'
+                            : 'The adviser has not added a meeting link yet. Your booking is locked in. Please wait for the adviser to add Zoom, Tencent/VooV, or Lark details; if the appointment is soon, contact platform support for help.'}
+                        </p>
+                      )}
                     </div>
                   )
                 })()}
