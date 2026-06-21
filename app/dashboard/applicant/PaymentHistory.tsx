@@ -3,7 +3,7 @@
 import { useState, useEffect, useTransition } from 'react'
 import { fetchApplicantOrders, studentConfirmComplete, studentRequestRefund } from '@/app/actions/payments'
 import { submitReview, fetchOrderReviewStatus } from '@/app/actions/reviews'
-import { fetchMeetingLinksForAdvisers, type MeetingLinks } from '@/app/actions/meetings'
+import { fetchMeetingDetailsForAdvisers, type AdviserMeetingDetails } from '@/app/actions/meetings'
 import type { Order } from '@/app/lib/orders'
 import type { Locale } from '@/app/lib/i18n'
 
@@ -116,7 +116,7 @@ export default function PaymentHistory({ locale }: { locale: Locale }) {
   const [acting, startAction]         = useTransition()
   const [reviewed, setReviewed]       = useState<Record<string, boolean>>({})
   const [showReview, setShowReview]   = useState<string | null>(null)
-  const [meetingLinks, setMeetingLinks] = useState<Record<string, MeetingLinks>>({})
+  const [meetingDetails, setMeetingDetails] = useState<Record<string, AdviserMeetingDetails>>({})
 
   const reload = async () => {
     const ords = await fetchApplicantOrders()
@@ -136,8 +136,8 @@ export default function PaymentHistory({ locale }: { locale: Locale }) {
         .map(o => o.adviserId)
     )]
     if (activeAdviserIds.length > 0) {
-      const links = await fetchMeetingLinksForAdvisers(activeAdviserIds)
-      setMeetingLinks(links)
+      const details = await fetchMeetingDetailsForAdvisers(activeAdviserIds)
+      setMeetingDetails(details)
     }
     setLoading(false)
   }
@@ -232,44 +232,66 @@ export default function PaymentHistory({ locale }: { locale: Locale }) {
 
                 {/* Meeting details — visible after payment is confirmed */}
                 {MEETING_VISIBLE_STATUSES.includes(order.status) && (() => {
-                  const links = meetingLinks[order.adviserId]
+                  const details = meetingDetails[order.adviserId]
+                  const links = details?.meetingLinks
+                  const contact = details?.contactInfo
                   const entries = links ? [
                     { key: 'zoom',    label: 'Zoom',                            icon: '🖥️', url: links.zoom },
                     { key: 'tencent', label: zh ? '腾讯会议 / VooV' : 'Tencent / VooV', icon: '🇨🇳', url: links.tencent },
                     { key: 'lark',    label: zh ? '飞书 / Lark' : 'Feishu / Lark',      icon: '🪶', url: links.lark },
                   ].filter(e => e.url) : []
+                  const hasContact = !!(contact?.wechat || contact?.email || contact?.phone || contact?.note)
+                  const hasDetails = entries.length > 0 || hasContact
                   return (
                     <div className={`rounded-lg border px-3 py-3 space-y-2 ${
-                      entries.length > 0
+                      hasDetails
                         ? 'bg-green-50 border-green-200'
                         : 'bg-amber-50 border-amber-200'
                     }`}>
                       <p className={`text-xs font-semibold ${
-                        entries.length > 0 ? 'text-green-800' : 'text-amber-800'
+                        hasDetails ? 'text-green-800' : 'text-amber-800'
                       }`}>
-                        {zh ? '咨询方式 / 会议链接' : 'Meeting details'}
+                        {zh ? '咨询方式 / 联系导师' : 'Meeting and contact details'}
                       </p>
-                      {entries.length > 0 ? (
+                      {hasDetails ? (
                         <>
                           <p className="text-xs text-gray-600 leading-relaxed">
                             {zh
-                              ? '请选择适合你的工具进入会议。中国大陆学生建议优先使用腾讯会议或飞书；Zoom 可能需要合适的网络环境。'
-                              : 'Choose the tool that works best for you. Tencent/VooV or Lark are usually smoother for students in China; Zoom may require a compatible network.'}
+                              ? '付款已确认，以下信息仅对已付款学生显示。请按预约时间进入会议；如需改时间，请优先联系导师。'
+                              : 'Payment is confirmed. These details are visible only to paid students. Join at the scheduled time, or contact the adviser if you need to coordinate.'}
                           </p>
-                          <div className="flex flex-wrap gap-2">
-                            {entries.map(e => (
-                              <a key={e.key} href={e.url} target="_blank" rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 rounded-lg border bg-white px-3 py-1.5 text-xs font-medium hover:bg-gray-50 transition">
-                                <span>{e.icon}</span>{e.label}
-                              </a>
-                            ))}
-                          </div>
+                          {entries.length > 0 && (
+                            <div className="flex flex-wrap gap-2">
+                              {entries.map(e => (
+                                <a key={e.key} href={e.url} target="_blank" rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1.5 rounded-lg border bg-white px-3 py-1.5 text-xs font-medium hover:bg-gray-50 transition">
+                                  <span>{e.icon}</span>{e.label}
+                                </a>
+                              ))}
+                            </div>
+                          )}
+                          {hasContact && (
+                            <div className="rounded-lg border bg-white px-3 py-2 text-xs text-gray-700 space-y-1">
+                              <p className="font-medium text-gray-900">{zh ? '导师联系方式' : 'Adviser contact'}</p>
+                              {contact?.wechat && <p>{zh ? '微信：' : 'WeChat: '}<span className="font-medium break-all">{contact.wechat}</span></p>}
+                              {contact?.email && (
+                                <p>
+                                  {zh ? '邮箱：' : 'Email: '}
+                                  <a href={`mailto:${contact.email}`} className="font-medium text-blue-600 hover:underline break-all">
+                                    {contact.email}
+                                  </a>
+                                </p>
+                              )}
+                              {contact?.phone && <p>{zh ? '电话/其他：' : 'Phone/other: '}<span className="font-medium break-all">{contact.phone}</span></p>}
+                              {contact?.note && <p>{zh ? '导师备注：' : 'Note: '}<span className="break-all">{contact.note}</span></p>}
+                            </div>
+                          )}
                         </>
                       ) : (
                         <p className="text-xs text-amber-800 leading-relaxed">
                           {zh
-                            ? '导师暂未填写会议链接。你的预约已经锁定，请等待导师更新 Zoom / 腾讯会议 / 飞书链接；如果临近预约时间仍未看到链接，请联系平台客服协助安排。'
-                            : 'The adviser has not added a meeting link yet. Your booking is locked in. Please wait for the adviser to add Zoom, Tencent/VooV, or Lark details; if the appointment is soon, contact platform support for help.'}
+                            ? '导师暂未填写咨询方式。你的预约已经锁定，请联系平台客服协助安排。'
+                            : 'The adviser has not added meeting/contact details yet. Your booking is locked in; contact platform support for help.'}
                         </p>
                       )}
                     </div>

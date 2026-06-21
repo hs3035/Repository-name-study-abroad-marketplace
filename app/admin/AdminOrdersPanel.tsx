@@ -66,7 +66,7 @@ export default function AdminOrdersPanel({ locale }: Props) {
     <div className="space-y-5">
       <div className="grid gap-3 md:grid-cols-3">
         <SummaryCard label={zh ? '待确认付款' : 'Awaiting payment'} value={manualPending.length} tone="yellow" />
-        <SummaryCard label={zh ? '待人工结算' : 'Awaiting payout'} value={confirmed.length} tone="blue" />
+        <SummaryCard label={zh ? '学生已确认，待结算' : 'Student confirmed, awaiting payout'} value={confirmed.length} tone="blue" />
         <SummaryCard label={zh ? '全部订单' : 'All orders'} value={orders.length} tone="gray" />
       </div>
 
@@ -117,7 +117,7 @@ export default function AdminOrdersPanel({ locale }: Props) {
         <div className="border-b px-5 py-4">
           <h2 className="font-semibold">{zh ? '人工结算给导师' : 'Manual mentor payout'}</h2>
           <p className="text-xs text-gray-500 mt-1">
-            {zh ? '学生确认服务完成后，你线下给导师结算，再在这里标记已结算。' : 'After student confirmation, pay the mentor offline and mark it released here.'}
+            {zh ? '只有学生确认服务完成后，订单才会出现在这里。请按系统显示的导师到账金额和导师结算账户线下打款，再标记已结算。' : 'Orders appear here only after student confirmation. Pay the mentor offline using the shown payout amount and payout info, then mark it released.'}
           </p>
         </div>
         <OrderList

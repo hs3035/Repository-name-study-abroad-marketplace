@@ -131,16 +131,27 @@ function AdviserCard({ adviser, summary, reviews, completedCount, locale, onBook
         </div>
       )}
 
+      {!adviser.bookingReady && (
+        <div className="px-5 pb-3">
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+            {zh
+              ? '导师还在完善联系方式、会议链接或结算账户，暂时不能预约。'
+              : 'This mentor is still completing contact, meeting, or payout setup and cannot be booked yet.'}
+          </div>
+        </div>
+      )}
+
       <div className="px-5 pb-5 flex gap-2">
         <button className="flex-1 rounded-xl border py-2 text-sm font-medium hover:bg-gray-50 transition">
           {ad.contact}
         </button>
         <button
-          onClick={onBook}
-          className="flex-1 rounded-xl bg-black py-2 text-sm font-medium text-white hover:bg-gray-800 transition"
+          onClick={adviser.bookingReady ? onBook : undefined}
+          disabled={!adviser.bookingReady}
+          className="flex-1 rounded-xl bg-black py-2 text-sm font-medium text-white hover:bg-gray-800 transition disabled:cursor-not-allowed disabled:opacity-40"
         >
-          📅 {d.calendar.bookChat}
-          {adviser.chatPrice > 0 && (
+          📅 {adviser.bookingReady ? d.calendar.bookChat : (zh ? '暂不可预约' : 'Not bookable')}
+          {adviser.bookingReady && adviser.chatPrice > 0 && (
             <span className="ml-1 opacity-70">¥{adviser.chatPrice}</span>
           )}
         </button>
@@ -233,6 +244,7 @@ export default function AdviserSearch({
           adviserName={bookingAdviser.name}
           adviserTimezone={bookingAdviser.timezone}
           adviserStripeReady={bookingAdviser.stripeReady}
+          bookingReady={bookingAdviser.bookingReady}
           paymentMode={paymentMode}
           locale={locale}
           onClose={() => setBookingAdviser(null)}

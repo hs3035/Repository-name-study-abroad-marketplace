@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getSession } from '@/app/lib/session'
 import { getSlotById } from '@/app/lib/slots'
-import { getAdviserById } from '@/app/lib/advisers'
+import { getAdviserById, isAdviserBookingReady } from '@/app/lib/advisers'
 import { getLocale } from '@/app/lib/locale'
 import { calcFees } from '@/app/lib/stripe'
 import { getCheckoutPaymentMethods } from '@/app/lib/payment-methods'
@@ -30,6 +30,16 @@ export default async function CheckoutPage({ searchParams }: Props) {
 
   const adviser = getAdviserById(slot.adviserId)
   if (!adviser) redirect('/dashboard/applicant')
+  if (!isAdviserBookingReady(adviser)) {
+    return (
+      <CheckoutError
+        zh={zh}
+        message={zh
+          ? '该导师还没有完成联系方式、会议链接和结算账户设置，暂时不能预约。'
+          : 'This mentor has not completed contact, meeting, and payout setup yet.'}
+      />
+    )
+  }
 
   const amountFen = slot.price * 100
   const { platformFeeFen, adviserPayoutFen } = calcFees(amountFen)

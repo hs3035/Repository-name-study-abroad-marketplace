@@ -12,6 +12,7 @@ type Props = {
   adviserName: string
   adviserTimezone: string
   adviserStripeReady: boolean
+  bookingReady: boolean
   paymentMode: 'stripe' | 'manual'
   locale: Locale
   onClose: () => void
@@ -38,7 +39,7 @@ function formatDateHeader(localDate: string, locale: Locale): string {
   return `${weekdays[d.getUTCDay()]} ${d.getUTCMonth() + 1}/${d.getUTCDate()}`
 }
 
-export default function BookSlotModal({ adviserId, adviserName, adviserTimezone, adviserStripeReady, paymentMode, locale, onClose }: Props) {
+export default function BookSlotModal({ adviserId, adviserName, adviserTimezone, adviserStripeReady, bookingReady, paymentMode, locale, onClose }: Props) {
   const t = getDict(locale).calendar
   const zh = locale === 'zh'
 
@@ -48,7 +49,7 @@ export default function BookSlotModal({ adviserId, adviserName, adviserTimezone,
   const [selectedSlot, setSelectedSlot] = useState<LocalSlot | null>(null)
 
   const studentTz = getStudentTimezone()
-  const canPay = paymentMode === 'manual' || adviserStripeReady
+  const canPay = bookingReady && (paymentMode === 'manual' || adviserStripeReady)
 
   useEffect(() => {
     fetchAdviserAvailableSlots(adviserId).then(slots => {
@@ -186,7 +187,14 @@ export default function BookSlotModal({ adviserId, adviserName, adviserTimezone,
                     </p>
                   )}
                   <p className="text-sm text-gray-500">30 {zh ? '分钟' : 'min'} · ¥{selectedSlot.price}</p>
-                  {!canPay && (
+                  {!bookingReady && (
+                    <p className="text-xs text-amber-600">
+                      {zh
+                        ? '导师还没有完成联系方式、会议链接和结算账户设置，暂时不能预约。'
+                        : 'This mentor has not completed contact, meeting, and payout setup yet.'}
+                    </p>
+                  )}
+                  {bookingReady && !canPay && (
                     <p className="text-xs text-amber-600">{t.noStripe}</p>
                   )}
                   <button onClick={handlePay} disabled={!canPay}

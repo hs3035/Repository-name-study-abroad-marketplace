@@ -35,6 +35,11 @@ export async function saveAdviserProfile(formData: FormData): Promise<SaveProfil
   const writingSampleTitle = str('writingSampleTitle')
   const writingSampleText  = str('writingSampleText')
 
+  const contactWechat = str('contactWechat')
+  const contactEmail  = str('contactEmail')
+  const contactPhone  = str('contactPhone')
+  const contactNote   = str('contactNote')
+
   const zoomLink    = str('meetingZoom')
   const tencentLink = str('meetingTencent')
   const larkLink    = str('meetingLark')
@@ -51,6 +56,9 @@ export async function saveAdviserProfile(formData: FormData): Promise<SaveProfil
   // Validate video URL: only allow http/https
   if (videoIntroUrl && !videoIntroUrl.startsWith('http')) {
     return { ok: false, error: '视频链接必须以 http 或 https 开头' }
+  }
+  if (contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) {
+    return { ok: false, error: '联系邮箱格式不正确' }
   }
   for (const [label, link] of [['Zoom', zoomLink], ['腾讯会议', tencentLink], ['飞书', larkLink]] as const) {
     if (link && !link.startsWith('http')) {
@@ -85,6 +93,13 @@ export async function saveAdviserProfile(formData: FormData): Promise<SaveProfil
     lark: larkLink || undefined,
   }
 
+  const contactInfo = {
+    wechat: contactWechat || undefined,
+    email: contactEmail || undefined,
+    phone: contactPhone || undefined,
+    note: contactNote || undefined,
+  }
+
   const payoutInfo = {
     accountName: payoutAccountName || undefined,
     wechat: payoutWechat || undefined,
@@ -108,6 +123,7 @@ export async function saveAdviserProfile(formData: FormData): Promise<SaveProfil
     languages,
     services,
     packages,
+    contactInfo,
     meetingLinks,
     payoutInfo,
     updatedAt: new Date().toISOString(),

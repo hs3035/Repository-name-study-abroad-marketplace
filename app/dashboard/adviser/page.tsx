@@ -19,6 +19,7 @@ function computeCompletion(adviser: ReturnType<typeof getAdviserById>) {
     { label_zh: '已上传头像',        label_en: 'Profile photo uploaded', done: !!adviser.profilePhotoUrl },
     { label_zh: '已添加写作样本',    label_en: 'Writing sample added',   done: !!(adviser.writingSampleText?.trim() || adviser.writingSampleFileUrl) },
     { label_zh: '已添加视频介绍',    label_en: 'Video intro added',      done: !!adviser.videoIntroUrl?.trim() },
+    { label_zh: '已填写联系方式',    label_en: 'Contact info added',      done: !!(adviser.contactInfo?.wechat?.trim() || adviser.contactInfo?.email?.trim() || adviser.contactInfo?.phone?.trim()) },
     { label_zh: '已设置会议链接',    label_en: 'Meeting links added',    done: !!(adviser.meetingLinks?.zoom?.trim() || adviser.meetingLinks?.tencent?.trim() || adviser.meetingLinks?.lark?.trim()) },
     { label_zh: '已设置服务价格',    label_en: 'Service prices set',     done: Object.values(adviser.services ?? {}).some(s => s?.enabled) },
     { label_zh: '已设置可预约时间',  label_en: 'Availability configured', done: false /* checked via TodaysTasks */ },
@@ -139,6 +140,7 @@ export default async function AdviserDashboard() {
               languages:            adviser.languages ?? [],
               services:             adviser.services ?? {},
               packages:             adviser.packages ?? [],
+              contactInfo:          adviser.contactInfo ?? {},
               meetingLinks:         adviser.meetingLinks ?? {},
               payoutInfo:           adviser.payoutInfo ?? {},
             }}

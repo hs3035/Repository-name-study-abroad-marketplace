@@ -42,6 +42,13 @@ export type AdviserPayoutInfo = {
   note?: string
 }
 
+export type AdviserContactInfo = {
+  wechat?: string
+  email?: string
+  phone?: string
+  note?: string
+}
+
 export const LANGUAGE_OPTIONS = [
   { value: '中文',    en: 'Chinese'  },
   { value: 'English', en: 'English'  },
@@ -91,14 +98,47 @@ export type Adviser = {
     tencent?: string
     lark?: string
   }
+  /** Private contact details shown only to paid students */
+  contactInfo?: AdviserContactInfo
   /** Private payout instructions visible only to platform admins */
   payoutInfo?: AdviserPayoutInfo
   updatedAt?: string
 }
 
-/** Public adviser type — strips private auth/payment fields, adds stripeReady flag */
-export type PublicAdviser = Omit<Adviser, 'password' | 'stripeAccountId' | 'payoutInfo'> & {
+/** Public adviser type — strips private auth/payment/contact fields, adds readiness flags */
+export type PublicAdviser = Omit<Adviser, 'password' | 'stripeAccountId' | 'payoutInfo' | 'meetingLinks' | 'contactInfo'> & {
   stripeReady: boolean
+  bookingReady: boolean
+}
+
+export function hasAdviserContactInfo(adviser: Adviser): boolean {
+  return !!(
+    adviser.contactInfo?.wechat?.trim() ||
+    adviser.contactInfo?.email?.trim() ||
+    adviser.contactInfo?.phone?.trim()
+  )
+}
+
+export function hasAdviserMeetingLinks(adviser: Adviser): boolean {
+  return !!(
+    adviser.meetingLinks?.zoom?.trim() ||
+    adviser.meetingLinks?.tencent?.trim() ||
+    adviser.meetingLinks?.lark?.trim()
+  )
+}
+
+export function hasAdviserPayoutInfo(adviser: Adviser): boolean {
+  return !!(
+    adviser.payoutInfo?.wechat?.trim() ||
+    adviser.payoutInfo?.alipay?.trim() ||
+    adviser.payoutInfo?.wechatQrUrl ||
+    adviser.payoutInfo?.alipayQrUrl ||
+    adviser.payoutInfo?.bankAccountNumber?.trim()
+  )
+}
+
+export function isAdviserBookingReady(adviser: Adviser): boolean {
+  return hasAdviserContactInfo(adviser) && hasAdviserMeetingLinks(adviser) && hasAdviserPayoutInfo(adviser)
 }
 
 function toPublic(adviser: Adviser): PublicAdviser {
@@ -106,7 +146,13 @@ function toPublic(adviser: Adviser): PublicAdviser {
   delete (rest as Partial<Adviser>).password
   delete (rest as Partial<Adviser>).stripeAccountId
   delete (rest as Partial<Adviser>).payoutInfo
-  return { ...rest, stripeReady: !!adviser.stripeAccountId } as PublicAdviser
+  delete (rest as Partial<Adviser>).meetingLinks
+  delete (rest as Partial<Adviser>).contactInfo
+  return {
+    ...rest,
+    stripeReady: !!adviser.stripeAccountId,
+    bookingReady: isAdviserBookingReady(adviser),
+  } as PublicAdviser
 }
 
 // Persist across hot-reloads in dev

@@ -1,7 +1,7 @@
 import { type NextRequest } from 'next/server'
 import type Stripe from 'stripe'
 import { getSession } from '@/app/lib/session'
-import { getAdviserById, getAllAdvisers } from '@/app/lib/advisers'
+import { getAdviserById, getAllAdvisers, isAdviserBookingReady } from '@/app/lib/advisers'
 import { getAvailableSlots } from '@/app/lib/slots'
 import { createOrder } from '@/app/lib/orders'
 import { getStripe, calcFees } from '@/app/lib/stripe'
@@ -53,6 +53,10 @@ export async function POST(request: NextRequest) {
   const adviser = getAdviserById(targetAdviserId)
   if (!adviser) {
     return Response.json({ error: '导师不存在' }, { status: 400 })
+  }
+  if (!isAdviserBookingReady(adviser)) {
+    console.warn(`[stripe/checkout] Rejected: adviser "${adviser.name}" has not completed booking setup`)
+    return Response.json({ error: '该导师还没有完成联系方式、会议链接和结算账户设置，暂时不能预约付款' }, { status: 400 })
   }
 
   // ── Stripe client ─────────────────────────────────────────────────────────────

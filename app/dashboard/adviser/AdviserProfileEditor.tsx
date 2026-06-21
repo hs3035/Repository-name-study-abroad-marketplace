@@ -9,6 +9,7 @@ import {
   type AdviserService,
   type ApplicationPackage,
   type AdviserPayoutInfo,
+  type AdviserContactInfo,
 } from '@/app/lib/advisers'
 
 type InitialData = {
@@ -24,6 +25,7 @@ type InitialData = {
   languages: string[]
   services: Partial<Record<ServiceKey, AdviserService>>
   packages: ApplicationPackage[]
+  contactInfo: AdviserContactInfo
   meetingLinks: { zoom?: string; tencent?: string; lark?: string }
   payoutInfo: AdviserPayoutInfo
 }
@@ -38,7 +40,7 @@ function newPackage(): ApplicationPackage {
   return { id: crypto.randomUUID(), level: 'master', schoolCount: 5, price: 15000, note: '' }
 }
 
-type Tab = 'about' | 'sample' | 'video' | 'services' | 'meeting' | 'payout'
+type Tab = 'about' | 'sample' | 'video' | 'services' | 'contact' | 'meeting' | 'payout'
 
 // ── Embed helpers ──────────────────────────────────────────────────────────────
 
@@ -196,6 +198,12 @@ export default function AdviserProfileEditor({ initial, locale }: Props) {
   // Video tab
   const [videoIntroUrl, setVideoUrl] = useState(initial.videoIntroUrl)
 
+  // Contact tab
+  const [contactWechat, setContactWechat] = useState(initial.contactInfo.wechat ?? '')
+  const [contactEmail, setContactEmail]   = useState(initial.contactInfo.email ?? '')
+  const [contactPhone, setContactPhone]   = useState(initial.contactInfo.phone ?? '')
+  const [contactNote, setContactNote]     = useState(initial.contactInfo.note ?? '')
+
   // Meeting links tab
   const [zoomLink, setZoomLink]       = useState(initial.meetingLinks.zoom ?? '')
   const [tencentLink, setTencentLink] = useState(initial.meetingLinks.tencent ?? '')
@@ -276,6 +284,10 @@ export default function AdviserProfileEditor({ initial, locale }: Props) {
         }
       }
       fd.set('packages', JSON.stringify(packages))
+      fd.set('contactWechat', contactWechat)
+      fd.set('contactEmail', contactEmail)
+      fd.set('contactPhone', contactPhone)
+      fd.set('contactNote', contactNote)
       fd.set('meetingZoom', zoomLink)
       fd.set('meetingTencent', tencentLink)
       fd.set('meetingLark', larkLink)
@@ -369,6 +381,7 @@ export default function AdviserProfileEditor({ initial, locale }: Props) {
     { id: 'sample',   zh: '写作样本',    en: 'Writing Sample' },
     { id: 'video',    zh: '视频介绍',    en: 'Video Intro' },
     { id: 'services', zh: '服务 & 价格', en: 'Services' },
+    { id: 'contact',  zh: '联系方式',    en: 'Contact' },
     { id: 'meeting',  zh: '会议链接',    en: 'Meeting Links' },
     { id: 'payout',   zh: '结算账户',    en: 'Payout Info' },
   ]
@@ -630,6 +643,61 @@ export default function AdviserProfileEditor({ initial, locale }: Props) {
               className="mt-3 w-full rounded-xl border-2 border-dashed py-3 text-sm text-gray-500 hover:border-gray-400 hover:text-gray-700 transition">
               + {zh ? '添加套餐' : 'Add Package'}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Tab: Contact Info ────────────────────────────────────────────── */}
+      {activeTab === 'contact' && (
+        <div className="space-y-5">
+          <div className="rounded-xl bg-blue-50 border border-blue-100 px-4 py-3 text-xs text-blue-700">
+            {zh
+              ? '这些联系方式只会在学生付款被平台确认后显示，用于和学生确认具体咨询安排。建议至少填写微信或邮箱，避免学生付款后找不到你。'
+              : 'These contact details are shown only after the student payment is confirmed. Add at least WeChat or email so paid students can coordinate the meeting with you.'}
+          </div>
+
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">{zh ? '微信号' : 'WeChat ID'}</label>
+            <input
+              type="text"
+              value={contactWechat}
+              onChange={e => setContactWechat(e.target.value)}
+              placeholder={zh ? '如：gomentorgo_mentor' : 'e.g. gomentorgo_mentor'}
+              className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black transition"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">{zh ? '联系邮箱' : 'Contact email'}</label>
+            <input
+              type="email"
+              value={contactEmail}
+              onChange={e => setContactEmail(e.target.value)}
+              placeholder={zh ? '学生付款后可通过这个邮箱联系你' : 'Paid students can contact you here'}
+              className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black transition"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">{zh ? '手机 / WhatsApp / 其他联系方式（可选）' : 'Phone / WhatsApp / other contact (optional)'}</label>
+            <input
+              type="text"
+              value={contactPhone}
+              onChange={e => setContactPhone(e.target.value)}
+              placeholder={zh ? '如：WhatsApp、Telegram 或手机号' : 'e.g. WhatsApp, Telegram, or phone number'}
+              className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black transition"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">{zh ? '联系备注（可选）' : 'Contact note (optional)'}</label>
+            <textarea
+              rows={3}
+              value={contactNote}
+              onChange={e => setContactNote(e.target.value)}
+              placeholder={zh ? '如：添加微信请备注 GoMentorGo + 订单号；通常 24 小时内回复。' : 'e.g. Please mention GoMentorGo + order ID when adding me; I usually reply within 24 hours.'}
+              className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black transition resize-none"
+            />
           </div>
         </div>
       )}

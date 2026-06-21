@@ -1,6 +1,6 @@
 import { type NextRequest } from 'next/server'
 import { getSession } from '@/app/lib/session'
-import { getAdviserById } from '@/app/lib/advisers'
+import { getAdviserById, isAdviserBookingReady } from '@/app/lib/advisers'
 import { bookSlot, getSlotById } from '@/app/lib/slots'
 import { createOrder, getActiveOrderBySlot } from '@/app/lib/orders'
 import { calcFees } from '@/app/lib/stripe'
@@ -46,6 +46,9 @@ export async function POST(request: NextRequest) {
   const adviser = getAdviserById(slot.adviserId)
   if (!adviser) {
     return Response.json({ error: '导师不存在' }, { status: 400 })
+  }
+  if (!isAdviserBookingReady(adviser)) {
+    return Response.json({ error: '该导师还没有完成联系方式、会议链接和结算账户设置，暂时不能预约' }, { status: 400 })
   }
 
   const locked = bookSlot(slot.id, session.userId, session.name)
