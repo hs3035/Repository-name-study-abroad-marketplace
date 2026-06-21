@@ -1,6 +1,10 @@
 'use server'
 
 import {
+  getAdviserById,
+  type AdviserPayoutInfo,
+} from '@/app/lib/advisers'
+import {
   getAllOrders,
   getOrderById,
   markManualOrderPaid,
@@ -17,9 +21,16 @@ async function requireAdmin(): Promise<boolean> {
   return isAdminSession(session)
 }
 
-export async function adminFetchOrders(): Promise<Order[]> {
+export type AdminOrder = Order & {
+  adviserPayoutInfo?: AdviserPayoutInfo
+}
+
+export async function adminFetchOrders(): Promise<AdminOrder[]> {
   if (!(await requireAdmin())) return []
-  return getAllOrders()
+  return getAllOrders().map(order => ({
+    ...order,
+    adviserPayoutInfo: getAdviserById(order.adviserId)?.payoutInfo,
+  }))
 }
 
 export async function adminConfirmManualPayment(orderId: string): Promise<{ ok: boolean; error?: string }> {

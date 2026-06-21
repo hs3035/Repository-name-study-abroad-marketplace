@@ -7,13 +7,13 @@ import {
   adminConfirmManualPayment,
   adminFetchOrders,
   adminMarkManualPayoutReleased,
+  type AdminOrder,
 } from '@/app/actions/admin'
 import type { Locale } from '@/app/lib/i18n'
-import type { Order } from '@/app/lib/orders'
 
 type Props = { locale: Locale }
 
-const STATUS_ZH: Record<Order['status'], string> = {
+const STATUS_ZH: Record<AdminOrder['status'], string> = {
   pending: '待支付',
   pending_payment: '待人工确认付款',
   paid: '已付款',
@@ -28,7 +28,7 @@ const STATUS_ZH: Record<Order['status'], string> = {
 
 export default function AdminOrdersPanel({ locale }: Props) {
   const zh = locale === 'zh'
-  const [orders, setOrders] = useState<Order[]>([])
+  const [orders, setOrders] = useState<AdminOrder[]>([])
   const [error, setError] = useState('')
   const [pending, startTransition] = useTransition()
 
@@ -168,10 +168,10 @@ function OrderList({
   empty,
   renderActions,
 }: {
-  orders: Order[]
+  orders: AdminOrder[]
   zh: boolean
   empty: string
-  renderActions?: (order: Order) => ReactNode
+  renderActions?: (order: AdminOrder) => ReactNode
 }) {
   if (orders.length === 0) {
     return <div className="px-5 py-8 text-center text-sm text-gray-400">{empty}</div>
@@ -193,6 +193,7 @@ function OrderList({
               {' · '}
               {zh ? '导师到账：' : 'Mentor payout: '}¥{(order.adviserPayoutFen / 100).toLocaleString()}
             </p>
+            <PayoutInfo order={order} zh={zh} />
             <p className="text-xs text-gray-400 break-all">
               {zh ? '订单号：' : 'Order: '}{order.id}
             </p>
@@ -200,6 +201,27 @@ function OrderList({
           {renderActions && <div className="flex flex-wrap gap-2">{renderActions(order)}</div>}
         </div>
       ))}
+    </div>
+  )
+}
+
+function PayoutInfo({ order, zh }: { order: AdminOrder; zh: boolean }) {
+  const info = order.adviserPayoutInfo
+  if (!info?.accountName && !info?.wechat && !info?.alipay && !info?.note) {
+    return (
+      <div className="rounded-lg border border-yellow-200 bg-yellow-50 px-3 py-2 text-xs text-yellow-800">
+        {zh ? '导师尚未填写结算账户，请联系导师补充后再打款。' : 'The mentor has not added payout info yet. Ask them to add it before paying out.'}
+      </div>
+    )
+  }
+
+  return (
+    <div className="rounded-lg border bg-gray-50 px-3 py-2 text-xs text-gray-600 space-y-1">
+      <p className="font-medium text-gray-800">{zh ? '导师结算账户' : 'Mentor payout info'}</p>
+      {info.accountName && <p>{zh ? '收款人：' : 'Name: '}<span className="font-medium">{info.accountName}</span></p>}
+      {info.wechat && <p>{zh ? '微信：' : 'WeChat: '}<span className="font-medium break-all">{info.wechat}</span></p>}
+      {info.alipay && <p>{zh ? '支付宝：' : 'Alipay: '}<span className="font-medium break-all">{info.alipay}</span></p>}
+      {info.note && <p>{zh ? '备注：' : 'Note: '}<span className="break-all">{info.note}</span></p>}
     </div>
   )
 }

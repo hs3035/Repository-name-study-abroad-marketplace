@@ -8,6 +8,7 @@ import {
   type ServiceKey,
   type AdviserService,
   type ApplicationPackage,
+  type AdviserPayoutInfo,
 } from '@/app/lib/advisers'
 
 type InitialData = {
@@ -24,6 +25,7 @@ type InitialData = {
   services: Partial<Record<ServiceKey, AdviserService>>
   packages: ApplicationPackage[]
   meetingLinks: { zoom?: string; tencent?: string; lark?: string }
+  payoutInfo: AdviserPayoutInfo
 }
 
 type Props = {
@@ -36,7 +38,7 @@ function newPackage(): ApplicationPackage {
   return { id: crypto.randomUUID(), level: 'master', schoolCount: 5, price: 15000, note: '' }
 }
 
-type Tab = 'about' | 'sample' | 'video' | 'services' | 'meeting'
+type Tab = 'about' | 'sample' | 'video' | 'services' | 'meeting' | 'payout'
 
 // ── Embed helpers ──────────────────────────────────────────────────────────────
 
@@ -139,6 +141,12 @@ export default function AdviserProfileEditor({ initial, locale }: Props) {
   const [tencentLink, setTencentLink] = useState(initial.meetingLinks.tencent ?? '')
   const [larkLink, setLarkLink]       = useState(initial.meetingLinks.lark ?? '')
 
+  // Private payout info tab
+  const [payoutAccountName, setPayoutAccountName] = useState(initial.payoutInfo.accountName ?? '')
+  const [payoutWechat, setPayoutWechat]           = useState(initial.payoutInfo.wechat ?? '')
+  const [payoutAlipay, setPayoutAlipay]           = useState(initial.payoutInfo.alipay ?? '')
+  const [payoutNote, setPayoutNote]               = useState(initial.payoutInfo.note ?? '')
+
   // Services tab
   const [languages, setLanguages]   = useState<string[]>(initial.languages ?? [])
   const [services, setServices]     = useState<Partial<Record<ServiceKey, AdviserService>>>(initial.services ?? {})
@@ -193,6 +201,10 @@ export default function AdviserProfileEditor({ initial, locale }: Props) {
       fd.set('meetingZoom', zoomLink)
       fd.set('meetingTencent', tencentLink)
       fd.set('meetingLark', larkLink)
+      fd.set('payoutAccountName', payoutAccountName)
+      fd.set('payoutWechat', payoutWechat)
+      fd.set('payoutAlipay', payoutAlipay)
+      fd.set('payoutNote', payoutNote)
       const res = await saveAdviserProfile(fd)
       if (res.ok) { setSaved(true); setEditing(false) }
       else setError(res.error ?? (zh ? '保存失败' : 'Save failed'))
@@ -275,6 +287,7 @@ export default function AdviserProfileEditor({ initial, locale }: Props) {
     { id: 'video',    zh: '视频介绍',    en: 'Video Intro' },
     { id: 'services', zh: '服务 & 价格', en: 'Services' },
     { id: 'meeting',  zh: '会议链接',    en: 'Meeting Links' },
+    { id: 'payout',   zh: '结算账户',    en: 'Payout Info' },
   ]
 
   return (
@@ -591,6 +604,61 @@ export default function AdviserProfileEditor({ initial, locale }: Props) {
               />
             </div>
           ))}
+        </div>
+      )}
+
+      {/* ── Tab: Payout Info ─────────────────────────────────────────────── */}
+      {activeTab === 'payout' && (
+        <div className="space-y-5">
+          <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-xs text-amber-800">
+            {zh
+              ? '这里填写的是平台给你结算时使用的收款信息。学生看不到这些信息，只有平台管理员可以在结算订单时查看。'
+              : 'This payout information is used by the platform to pay you after completed orders. Students cannot see it; only platform admins can view it when processing payouts.'}
+          </div>
+
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">{zh ? '收款人姓名 / 昵称' : 'Payout account name'}</label>
+            <input
+              type="text"
+              value={payoutAccountName}
+              onChange={e => setPayoutAccountName(e.target.value)}
+              placeholder={zh ? '如：GoMentorGo / 张三' : 'e.g. GoMentorGo / Jane Zhang'}
+              className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black transition"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">{zh ? '微信收款账号' : 'WeChat payout account'}</label>
+            <input
+              type="text"
+              value={payoutWechat}
+              onChange={e => setPayoutWechat(e.target.value)}
+              placeholder={zh ? '填写微信号、手机号或收款备注' : 'WeChat ID, phone number, or payment note'}
+              className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black transition"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">{zh ? '支付宝收款账号' : 'Alipay payout account'}</label>
+            <input
+              type="text"
+              value={payoutAlipay}
+              onChange={e => setPayoutAlipay(e.target.value)}
+              placeholder={zh ? '填写支付宝手机号 / 邮箱 / 账号' : 'Alipay phone, email, or account ID'}
+              className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black transition"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">{zh ? '结算备注（可选）' : 'Payout note (optional)'}</label>
+            <textarea
+              rows={3}
+              value={payoutNote}
+              onChange={e => setPayoutNote(e.target.value)}
+              placeholder={zh ? '如：优先支付宝；每周五统一结算；请备注 GoMentorGo 咨询费等' : 'e.g. Prefer Alipay; weekly payout preferred; include GoMentorGo consultation fee in note'}
+              className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black transition resize-none"
+            />
+          </div>
         </div>
       )}
 

@@ -30,6 +30,13 @@ export type ApplicationPackage = {
   note: string   // adviser's custom description
 }
 
+export type AdviserPayoutInfo = {
+  accountName?: string
+  wechat?: string
+  alipay?: string
+  note?: string
+}
+
 export const LANGUAGE_OPTIONS = [
   { value: '中文',    en: 'Chinese'  },
   { value: 'English', en: 'English'  },
@@ -79,11 +86,13 @@ export type Adviser = {
     tencent?: string
     lark?: string
   }
+  /** Private payout instructions visible only to platform admins */
+  payoutInfo?: AdviserPayoutInfo
   updatedAt?: string
 }
 
-/** Public adviser type — strips password and stripeAccountId, adds stripeReady flag */
-export type PublicAdviser = Omit<Adviser, 'password' | 'stripeAccountId'> & {
+/** Public adviser type — strips private auth/payment fields, adds stripeReady flag */
+export type PublicAdviser = Omit<Adviser, 'password' | 'stripeAccountId' | 'payoutInfo'> & {
   stripeReady: boolean
 }
 
@@ -91,6 +100,7 @@ function toPublic(adviser: Adviser): PublicAdviser {
   const rest = { ...adviser }
   delete (rest as Partial<Adviser>).password
   delete (rest as Partial<Adviser>).stripeAccountId
+  delete (rest as Partial<Adviser>).payoutInfo
   return { ...rest, stripeReady: !!adviser.stripeAccountId } as PublicAdviser
 }
 

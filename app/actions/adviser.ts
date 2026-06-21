@@ -37,6 +37,10 @@ export async function saveAdviserProfile(formData: FormData): Promise<SaveProfil
   const zoomLink    = str('meetingZoom')
   const tencentLink = str('meetingTencent')
   const larkLink    = str('meetingLark')
+  const payoutAccountName = str('payoutAccountName')
+  const payoutWechat      = str('payoutWechat')
+  const payoutAlipay      = str('payoutAlipay')
+  const payoutNote        = str('payoutNote')
 
   // Validate video URL: only allow http/https
   if (videoIntroUrl && !videoIntroUrl.startsWith('http')) {
@@ -75,6 +79,13 @@ export async function saveAdviserProfile(formData: FormData): Promise<SaveProfil
     lark: larkLink || undefined,
   }
 
+  const payoutInfo = {
+    accountName: payoutAccountName || undefined,
+    wechat: payoutWechat || undefined,
+    alipay: payoutAlipay || undefined,
+    note: payoutNote || undefined,
+  }
+
   const ok = updateAdviser(session.userId, {
     bio,
     workExperience,
@@ -87,6 +98,7 @@ export async function saveAdviserProfile(formData: FormData): Promise<SaveProfil
     services,
     packages,
     meetingLinks,
+    payoutInfo,
     updatedAt: new Date().toISOString(),
   })
   return ok ? { ok: true } : { ok: false, error: '保存失败，请重试' }
