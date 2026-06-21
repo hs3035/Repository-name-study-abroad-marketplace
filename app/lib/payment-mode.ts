@@ -8,6 +8,8 @@ export type ManualPaymentConfig = {
   contact: string
   note: string
   qrUrl: string
+  wechatQrUrl: string
+  alipayQrUrl: string
 }
 
 export function getPaymentMode(): PaymentMode {
@@ -15,10 +17,15 @@ export function getPaymentMode(): PaymentMode {
 }
 
 export function getManualPaymentConfig(): ManualPaymentConfig {
+  const wechatQrUrl = process.env.MANUAL_WECHAT_QR_URL || process.env.MANUAL_PAYMENT_QR_URL || '/payment/wechat-pay.jpg'
+  const alipayQrUrl = process.env.MANUAL_ALIPAY_QR_URL || ''
+
   return {
     contact: process.env.MANUAL_PAYMENT_CONTACT ?? '',
     note: process.env.MANUAL_PAYMENT_NOTE ?? '',
-    qrUrl: process.env.MANUAL_PAYMENT_QR_URL || '/payment/wechat-pay.jpg',
+    qrUrl: wechatQrUrl,
+    wechatQrUrl,
+    alipayQrUrl,
   }
 }
 

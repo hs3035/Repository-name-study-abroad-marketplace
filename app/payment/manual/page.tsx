@@ -4,6 +4,7 @@ import { getLocale } from '@/app/lib/locale'
 import { getOrderById } from '@/app/lib/orders'
 import { getManualPaymentConfig } from '@/app/lib/payment-mode'
 import { getSession } from '@/app/lib/session'
+import ManualPaymentSelector from './ManualPaymentSelector'
 
 type Props = { searchParams: Promise<{ orderId?: string }> }
 
@@ -45,27 +46,14 @@ export default async function ManualPaymentPage({ searchParams }: Props) {
           />
         </div>
 
-        <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 space-y-3">
-          <h2 className="font-semibold text-amber-900">{zh ? '付款方式' : 'Payment instructions'}</h2>
-          {manual.contact && (
-            <p className="text-sm text-amber-800">
-              {zh ? '联系/收款账号：' : 'Payment contact: '}
-              <span className="font-semibold">{manual.contact}</span>
-            </p>
-          )}
-          {manual.note && <p className="text-sm text-amber-800 whitespace-pre-wrap">{manual.note}</p>}
-          <p className="text-xs text-amber-700">
-            {zh
-              ? `付款备注请填写订单号：${order.id}`
-              : `Please include this order ID in the payment note: ${order.id}`}
-          </p>
-          {manual.qrUrl && (
-            <div className="rounded-xl bg-white border p-3">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={manual.qrUrl} alt={zh ? '付款二维码' : 'Payment QR code'} className="mx-auto max-h-64 rounded-lg object-contain" />
-            </div>
-          )}
-        </div>
+        <ManualPaymentSelector
+          locale={locale}
+          orderId={order.id}
+          contact={manual.contact}
+          note={manual.note}
+          wechatQrUrl={manual.wechatQrUrl}
+          alipayQrUrl={manual.alipayQrUrl}
+        />
 
         <div className="rounded-xl bg-blue-50 border border-blue-100 p-4 text-xs text-blue-700">
           {zh

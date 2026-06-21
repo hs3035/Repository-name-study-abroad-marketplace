@@ -20,7 +20,13 @@ type Props = {
   adviserTimezone: string
   stripeReady: boolean
   paymentMode: PaymentMode
-  manualPayment: { contact: string; note: string; qrUrl: string }
+  manualPayment: {
+    contact: string
+    note: string
+    qrUrl: string
+    wechatQrUrl: string
+    alipayQrUrl: string
+  }
   paymentMethods: PaymentMethod[]
   locale: Locale
 }
