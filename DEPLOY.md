@@ -123,7 +123,7 @@ Railway redeploys automatically on every `git push`.
 ### Stripe Connect (adviser payouts)
 - Ensure your Stripe account has **Connect** enabled (Platform settings)
 - Advisers will go through Express onboarding when they click "Connect Stripe"
-- Commission: 15% platform fee is hardcoded in `app/lib/stripe.ts` (`PLATFORM_RATE`)
+- Commission: 10% platform fee is hardcoded in `app/lib/stripe.ts` (`PLATFORM_RATE`)
 
 ### Enable Alipay / WeChat Pay
 1. Stripe Dashboard → Settings → Payment methods

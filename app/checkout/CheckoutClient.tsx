@@ -202,8 +202,8 @@ export default function CheckoutClient({
         <div className="rounded-xl bg-gray-50 border px-4 py-2.5 text-xs text-gray-500 space-y-0.5">
           <p>
             {zh
-              ? `· 导师到账：¥${(adviserPayoutFen / 100).toLocaleString()}（平台收取 15% 服务费）`
-              : `· Mentor receives: ¥${(adviserPayoutFen / 100).toLocaleString()} (platform keeps 15% service fee)`}
+              ? `· 导师到账：¥${(adviserPayoutFen / 100).toLocaleString()}（平台收取 10% 服务费）`
+              : `· Mentor receives: ¥${(adviserPayoutFen / 100).toLocaleString()} (platform keeps 10% service fee)`}
           </p>
           {isManualPayment ? (
             <p>{zh ? '· 当前为人工确认付款模式' : '· Current mode: manual payment confirmation'}</p>

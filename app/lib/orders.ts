@@ -23,7 +23,7 @@ export type Order = {
   applicantName: string
   /** Total charged to the student, in fen (1 CNY = 100 fen) */
   amountFen: number
-  /** Platform commission (15%), in fen */
+  /** Platform commission, in fen */
   platformFeeFen: number
   /** Amount to transfer to adviser = amountFen - platformFeeFen, in fen */
   adviserPayoutFen: number

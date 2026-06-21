@@ -17,8 +17,8 @@ export function getStripe(): Stripe {
 
 // ── Commission constants ───────────────────────────────────────────────────────
 
-/** Platform commission rate (15%) */
-export const PLATFORM_RATE = 0.15
+/** Platform commission rate (10%) */
+export const PLATFORM_RATE = 0.10
 
 /**
  * Calculate fee split for a given amount.
