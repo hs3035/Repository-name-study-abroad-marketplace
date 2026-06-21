@@ -12,6 +12,7 @@ type Props = {
   adviserName: string
   adviserTimezone: string
   adviserStripeReady: boolean
+  paymentMode: 'stripe' | 'manual'
   locale: Locale
   onClose: () => void
 }
@@ -37,7 +38,7 @@ function formatDateHeader(localDate: string, locale: Locale): string {
   return `${weekdays[d.getUTCDay()]} ${d.getUTCMonth() + 1}/${d.getUTCDate()}`
 }
 
-export default function BookSlotModal({ adviserId, adviserName, adviserTimezone, adviserStripeReady, locale, onClose }: Props) {
+export default function BookSlotModal({ adviserId, adviserName, adviserTimezone, adviserStripeReady, paymentMode, locale, onClose }: Props) {
   const t = getDict(locale).calendar
   const zh = locale === 'zh'
 
@@ -47,6 +48,7 @@ export default function BookSlotModal({ adviserId, adviserName, adviserTimezone,
   const [selectedSlot, setSelectedSlot] = useState<LocalSlot | null>(null)
 
   const studentTz = getStudentTimezone()
+  const canPay = paymentMode === 'manual' || adviserStripeReady
 
   useEffect(() => {
     fetchAdviserAvailableSlots(adviserId).then(slots => {
@@ -184,10 +186,10 @@ export default function BookSlotModal({ adviserId, adviserName, adviserTimezone,
                     </p>
                   )}
                   <p className="text-sm text-gray-500">30 {zh ? '分钟' : 'min'} · ¥{selectedSlot.price}</p>
-                  {!adviserStripeReady && (
+                  {!canPay && (
                     <p className="text-xs text-amber-600">{t.noStripe}</p>
                   )}
-                  <button onClick={handlePay} disabled={!adviserStripeReady}
+                  <button onClick={handlePay} disabled={!canPay}
                     className="w-full rounded-xl bg-black py-2.5 text-sm font-medium text-white disabled:opacity-50 transition mt-1">
                     {`${t.bookConfirm} ¥${selectedSlot.price}`}
                   </button>

@@ -6,6 +6,7 @@ import { getAdviserCompletedOrderCount } from '@/app/lib/orders'
 import { redirect } from 'next/navigation'
 import { getDict } from '@/app/lib/i18n'
 import { getLocale } from '@/app/lib/locale'
+import { getPaymentMode } from '@/app/lib/payment-mode'
 import AdviserSearch from './AdviserSearch'
 import ApplicantProfile from './ApplicantProfile'
 import PaymentHistory from './PaymentHistory'
@@ -20,6 +21,7 @@ export default async function ApplicantDashboard() {
   if (!applicant) redirect('/login')
 
   const advisers = getAllAdvisers()
+  const paymentMode = getPaymentMode()
   const reviewSummaries: Record<string, ReviewSummary> = {}
   const reviewsByAdviser: Record<string, Review[]> = {}
   const completedCounts: Record<string, number> = {}
@@ -55,7 +57,7 @@ export default async function ApplicantDashboard() {
       </section>
 
       {/* Adviser search */}
-      <AdviserSearch advisers={advisers} reviewSummaries={reviewSummaries} reviewsByAdviser={reviewsByAdviser} completedCounts={completedCounts} locale={locale} />
+      <AdviserSearch advisers={advisers} reviewSummaries={reviewSummaries} reviewsByAdviser={reviewsByAdviser} completedCounts={completedCounts} paymentMode={paymentMode} locale={locale} />
 
       {/* Payment history */}
       <section className="bg-white rounded-2xl border p-6">

@@ -6,6 +6,7 @@ import { SERVICE_CATALOG } from '@/app/lib/advisers'
 import type { Locale } from '@/app/lib/i18n'
 import { COUNTRY_OPTIONS, getDict } from '@/app/lib/i18n'
 import type { ReviewSummary, Review } from '@/app/lib/reviews'
+import type { PaymentMode } from '@/app/lib/payment-mode'
 import BookSlotModal from './BookSlotModal'
 
 function StarDisplay({ average, count, zh }: { average: number; count: number; zh: boolean }) {
@@ -153,12 +154,14 @@ export default function AdviserSearch({
   reviewSummaries,
   reviewsByAdviser,
   completedCounts,
+  paymentMode,
   locale,
 }: {
   advisers: PublicAdviser[]
   reviewSummaries: Record<string, ReviewSummary>
   reviewsByAdviser: Record<string, Review[]>
   completedCounts: Record<string, number>
+  paymentMode: PaymentMode
   locale: Locale
 }) {
   const d = getDict(locale).applicantDash
@@ -230,6 +233,7 @@ export default function AdviserSearch({
           adviserName={bookingAdviser.name}
           adviserTimezone={bookingAdviser.timezone}
           adviserStripeReady={bookingAdviser.stripeReady}
+          paymentMode={paymentMode}
           locale={locale}
           onClose={() => setBookingAdviser(null)}
         />
