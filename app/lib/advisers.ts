@@ -115,9 +115,10 @@ export type Adviser = {
 }
 
 /** Public adviser type — strips private auth/payment/contact/verification fields, adds readiness flags */
-export type PublicAdviser = Omit<Adviser, 'password' | 'stripeAccountId' | 'payoutInfo' | 'meetingLinks' | 'contactInfo' | 'diplomaPath' | 'verificationLinks'> & {
+export type PublicAdviser = Omit<Adviser, 'password' | 'stripeAccountId' | 'payoutInfo' | 'meetingLinks' | 'contactInfo' | 'diplomaPath' | 'verificationLinks' | 'emailVerified' | 'diplomaStatus'> & {
   stripeReady: boolean
   bookingReady: boolean
+  identityVerified: boolean
 }
 
 export function hasAdviserContactInfo(adviser: Adviser): boolean {
@@ -150,6 +151,11 @@ export function isAdviserBookingReady(adviser: Adviser): boolean {
   return hasAdviserContactInfo(adviser) && hasAdviserMeetingLinks(adviser) && hasAdviserPayoutInfo(adviser)
 }
 
+export function isAdviserIdentityVerified(adviser: Adviser): boolean {
+  const isEduEmail = adviser.email.trim().toLowerCase().endsWith('.edu')
+  return (isEduEmail && adviser.emailVerified) || adviser.diplomaStatus === 'verified'
+}
+
 function toPublic(adviser: Adviser): PublicAdviser {
   const rest = { ...adviser }
   delete (rest as Partial<Adviser>).password
@@ -159,10 +165,13 @@ function toPublic(adviser: Adviser): PublicAdviser {
   delete (rest as Partial<Adviser>).contactInfo
   delete (rest as Partial<Adviser>).diplomaPath
   delete (rest as Partial<Adviser>).verificationLinks
+  delete (rest as Partial<Adviser>).emailVerified
+  delete (rest as Partial<Adviser>).diplomaStatus
   return {
     ...rest,
     stripeReady: !!adviser.stripeAccountId,
     bookingReady: isAdviserBookingReady(adviser),
+    identityVerified: isAdviserIdentityVerified(adviser),
   } as PublicAdviser
 }
 

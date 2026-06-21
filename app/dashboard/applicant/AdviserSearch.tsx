@@ -40,12 +40,19 @@ function AdviserCard({ adviser, summary, reviews, completedCount, locale, onBook
       <div className="p-5 flex flex-col gap-3 flex-1">
         <div className="flex items-start justify-between">
           <div>
-            <Link
-              href={`/advisers/${adviser.id}`}
-              className="font-semibold text-base hover:underline"
-            >
-              {adviser.name}
-            </Link>
+            <div className="flex flex-wrap items-center gap-2">
+              <Link
+                href={`/advisers/${adviser.id}`}
+                className="font-semibold text-base hover:underline"
+              >
+                {adviser.name}
+              </Link>
+              {adviser.identityVerified && (
+                <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
+                  ✓ {zh ? '身份已验证' : 'Verified'}
+                </span>
+              )}
+            </div>
             <p className="text-sm text-gray-500 mt-0.5">{adviser.school}</p>
             <StarDisplay average={summary.average} count={summary.count} zh={zh} />
             {completedCount > 0 && (

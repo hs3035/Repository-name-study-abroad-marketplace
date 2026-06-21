@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { getAdviserById, SERVICE_CATALOG } from '@/app/lib/advisers'
+import { getAdviserById, isAdviserIdentityVerified, SERVICE_CATALOG } from '@/app/lib/advisers'
 import { getMentorPublicReviews, getMentorReviewSummary } from '@/app/lib/reviews'
 import { getLocale } from '@/app/lib/locale'
 
@@ -36,6 +36,7 @@ export default async function AdviserPublicProfile({
 
   const reviews = getMentorPublicReviews(adviser.id)
   const summary = getMentorReviewSummary(adviser.id)
+  const identityVerified = isAdviserIdentityVerified(adviser)
 
   const activeServices = SERVICE_CATALOG.filter(s => adviser.services?.[s.key]?.enabled)
   const packages       = adviser.packages ?? []
@@ -58,9 +59,21 @@ export default async function AdviserPublicProfile({
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-3 flex-wrap">
             <div>
-              <h1 className="text-xl font-bold">{adviser.name}</h1>
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-xl font-bold">{adviser.name}</h1>
+                {identityVerified && (
+                  <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                    ✓ {zh ? '身份已验证' : 'Verified'}
+                  </span>
+                )}
+              </div>
               <p className="text-sm text-gray-500 mt-0.5">{adviser.school} · {adviser.major}</p>
               <p className="text-xs text-gray-400 mt-0.5">{adviser.country} · {adviser.region}</p>
+              {identityVerified && (
+                <p className="mt-2 text-xs text-emerald-700">
+                  {zh ? '平台已验证该导师的学校邮箱或身份材料。' : 'GoMentorGo has verified this mentor by school email or identity documents.'}
+                </p>
+              )}
             </div>
             {summary.count > 0 && (
               <div className="flex items-center gap-1.5 shrink-0">
