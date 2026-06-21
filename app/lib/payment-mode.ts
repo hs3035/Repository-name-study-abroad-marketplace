@@ -18,7 +18,7 @@ export function getPaymentMode(): PaymentMode {
 
 export function getManualPaymentConfig(): ManualPaymentConfig {
   const wechatQrUrl = process.env.MANUAL_WECHAT_QR_URL || process.env.MANUAL_PAYMENT_QR_URL || '/payment/wechat-pay.jpg'
-  const alipayQrUrl = process.env.MANUAL_ALIPAY_QR_URL || ''
+  const alipayQrUrl = process.env.MANUAL_ALIPAY_QR_URL || '/payment/alipay-pay.jpg'
 
   return {
     contact: process.env.MANUAL_PAYMENT_CONTACT ?? '',
