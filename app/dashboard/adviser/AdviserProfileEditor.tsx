@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useRef } from 'react'
+import { useEffect, useState, useTransition, useRef } from 'react'
 import { saveAdviserProfile, uploadWritingSample } from '@/app/actions/adviser'
 import {
   SERVICE_CATALOG,
@@ -155,6 +155,19 @@ export default function AdviserProfileEditor({ initial, locale }: Props) {
   const [saved, setSaved]           = useState(false)
   const [error, setError]           = useState('')
   const [isPending, startTransition] = useTransition()
+
+  useEffect(() => {
+    function openPayoutSettings() {
+      setEditing(true)
+      setActiveTab('payout')
+      window.setTimeout(() => {
+        document.getElementById('profile-payout-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 0)
+    }
+
+    window.addEventListener('open-adviser-payout-settings', openPayoutSettings)
+    return () => window.removeEventListener('open-adviser-payout-settings', openPayoutSettings)
+  }, [])
 
   // ── services helpers ─────────────────────────────────────────────────────────
   function toggleLanguage(lang: string) {

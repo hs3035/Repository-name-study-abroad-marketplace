@@ -265,6 +265,10 @@ export default function EarningsPanel({ locale, paymentMode }: { locale: Locale;
     })
   }
 
+  function handleOpenPayoutSettings() {
+    window.dispatchEvent(new Event('open-adviser-payout-settings'))
+  }
+
   if (loading) {
     return <div className="py-8 text-center text-sm text-gray-400">{zh ? '加载中…' : 'Loading…'}</div>
   }
@@ -302,12 +306,13 @@ export default function EarningsPanel({ locale, paymentMode }: { locale: Locale;
                 : 'Add your WeChat Pay or Alipay payout details in Profile → Payout Account. After payment and service confirmation, the platform settles the calculated amount to you.'}
             </p>
           </div>
-          <a
-            href="#profile-payout-section"
+          <button
+            type="button"
+            onClick={handleOpenPayoutSettings}
             className="shrink-0 rounded-xl border border-green-300 bg-white px-4 py-2 text-xs font-medium text-green-700 hover:bg-green-100 transition"
           >
             {zh ? '去设置结算账户' : 'Set payout account'}
-          </a>
+          </button>
         </div>
       ) : (
         <div className={`rounded-xl border p-4 flex items-start justify-between gap-4
