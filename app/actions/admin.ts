@@ -4,6 +4,7 @@ import {
   getAdviserById,
   type AdviserPayoutInfo,
 } from '@/app/lib/advisers'
+import { getAllApplicants, type PublicApplicant } from '@/app/lib/applicants'
 import { checkAndAutoRelease } from '@/app/actions/payments'
 import {
   getAllOrders,
@@ -26,6 +27,12 @@ export type AdminOrder = Order & {
   adviserPayoutInfo?: AdviserPayoutInfo
 }
 
+export type AdminApplicant = PublicApplicant & {
+  orderCount: number
+  paidOrderCount: number
+  totalPaidFen: number
+}
+
 export async function adminFetchOrders(): Promise<AdminOrder[]> {
   if (!(await requireAdmin())) return []
   await checkAndAutoRelease()
@@ -33,6 +40,23 @@ export async function adminFetchOrders(): Promise<AdminOrder[]> {
     ...order,
     adviserPayoutInfo: getAdviserById(order.adviserId)?.payoutInfo,
   }))
+}
+
+export async function adminFetchApplicants(): Promise<AdminApplicant[]> {
+  if (!(await requireAdmin())) return []
+  const orders = getAllOrders()
+  return getAllApplicants().map(applicant => {
+    const applicantOrders = orders.filter(order => order.applicantId === applicant.id)
+    const paidOrders = applicantOrders.filter(order =>
+      ['paid', 'in_progress', 'completed_by_adviser', 'confirmed', 'released'].includes(order.status),
+    )
+    return {
+      ...applicant,
+      orderCount: applicantOrders.length,
+      paidOrderCount: paidOrders.length,
+      totalPaidFen: paidOrders.reduce((sum, order) => sum + order.amountFen, 0),
+    }
+  })
 }
 
 export async function adminConfirmManualPayment(orderId: string): Promise<{ ok: boolean; error?: string }> {

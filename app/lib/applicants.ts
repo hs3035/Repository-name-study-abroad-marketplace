@@ -14,6 +14,7 @@ export type Applicant = {
   applicationLevel: ApplicationLevel
   bio: string
   role: 'applicant'
+  createdAt?: string
   // Extended profile
   currentSchool?: string        // where they study now
   targetCountries?: string[]    // countries they want to apply to
@@ -56,6 +57,7 @@ export async function createApplicant(data: {
     id: crypto.randomUUID(),
     ...data,
     bio: '',
+    createdAt: new Date().toISOString(),
     password: await bcrypt.hash(data.password, 10),
     role: 'applicant',
   }
@@ -76,6 +78,16 @@ export function updateApplicant(
 }
 
 export type PublicApplicant = Omit<Applicant, 'password'>
+
+export function getAllApplicants(): PublicApplicant[] {
+  return Array.from(applicants.values())
+    .map(a => {
+      const rest = { ...a }
+      delete (rest as Partial<Applicant>).password
+      return rest
+    })
+    .sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''))
+}
 
 export function searchApplicants(filter: {
   name?: string

@@ -4,6 +4,7 @@ import { getLocale } from '@/app/lib/locale'
 import { isAdminSession } from '@/app/lib/payment-mode'
 import { getSession } from '@/app/lib/session'
 import AdminOrdersPanel from './AdminOrdersPanel'
+import AdminStudentsPanel from './AdminStudentsPanel'
 
 export default async function AdminPage() {
   const [session, locale] = await Promise.all([getSession(), getLocale()])
@@ -45,6 +46,7 @@ export default async function AdminPage() {
         </div>
 
         <AdminOrdersPanel locale={locale} />
+        <AdminStudentsPanel locale={locale} />
       </div>
     </main>
   )
