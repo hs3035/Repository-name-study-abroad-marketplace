@@ -1,7 +1,14 @@
 'use server'
 
 import {
+  getAllAdviserRecords,
   getAdviserById,
+  hasAdviserContactInfo,
+  hasAdviserMeetingLinks,
+  hasAdviserPayoutInfo,
+  isAdviserBookingReady,
+  isAdviserIdentityVerified,
+  type AdminAdviserRecord,
   type AdviserPayoutInfo,
 } from '@/app/lib/advisers'
 import { getAllApplicants, type PublicApplicant } from '@/app/lib/applicants'
@@ -33,6 +40,19 @@ export type AdminApplicant = PublicApplicant & {
   totalPaidFen: number
 }
 
+export type AdminAdviser = AdminAdviserRecord & {
+  identityVerified: boolean
+  bookingReady: boolean
+  hasContactInfo: boolean
+  hasMeetingLinks: boolean
+  hasPayoutInfo: boolean
+  orderCount: number
+  paidOrderCount: number
+  completedOrderCount: number
+  totalPaidFen: number
+  adviserPayoutFen: number
+}
+
 export async function adminFetchOrders(): Promise<AdminOrder[]> {
   if (!(await requireAdmin())) return []
   await checkAndAutoRelease()
@@ -40,6 +60,33 @@ export async function adminFetchOrders(): Promise<AdminOrder[]> {
     ...order,
     adviserPayoutInfo: getAdviserById(order.adviserId)?.payoutInfo,
   }))
+}
+
+export async function adminFetchAdvisers(): Promise<AdminAdviser[]> {
+  if (!(await requireAdmin())) return []
+  const orders = getAllOrders()
+  return getAllAdviserRecords().map(adviser => {
+    const adviserOrders = orders.filter(order => order.adviserId === adviser.id)
+    const paidOrders = adviserOrders.filter(order =>
+      ['paid', 'in_progress', 'completed_by_adviser', 'confirmed', 'released'].includes(order.status),
+    )
+    const completedOrders = adviserOrders.filter(order =>
+      ['confirmed', 'released'].includes(order.status),
+    )
+    return {
+      ...adviser,
+      identityVerified: isAdviserIdentityVerified(adviser),
+      bookingReady: isAdviserBookingReady(adviser),
+      hasContactInfo: hasAdviserContactInfo(adviser),
+      hasMeetingLinks: hasAdviserMeetingLinks(adviser),
+      hasPayoutInfo: hasAdviserPayoutInfo(adviser),
+      orderCount: adviserOrders.length,
+      paidOrderCount: paidOrders.length,
+      completedOrderCount: completedOrders.length,
+      totalPaidFen: paidOrders.reduce((sum, order) => sum + order.amountFen, 0),
+      adviserPayoutFen: paidOrders.reduce((sum, order) => sum + order.adviserPayoutFen, 0),
+    }
+  })
 }
 
 export async function adminFetchApplicants(): Promise<AdminApplicant[]> {

@@ -87,6 +87,7 @@ export type Adviser = {
   chatPrice: number
   timezone: TZValue
   role: 'adviser'
+  createdAt?: string
   emailVerified: boolean
   diplomaStatus: DiplomaStatus
   diplomaPath?: string
@@ -121,7 +122,10 @@ export type PublicAdviser = Omit<Adviser, 'password' | 'stripeAccountId' | 'payo
   identityVerified: boolean
 }
 
-export function hasAdviserContactInfo(adviser: Adviser): boolean {
+type AdviserReadinessFields = Pick<Adviser, 'contactInfo' | 'meetingLinks' | 'payoutInfo'>
+type AdviserIdentityFields = Pick<Adviser, 'email' | 'emailVerified' | 'diplomaStatus'>
+
+export function hasAdviserContactInfo(adviser: AdviserReadinessFields): boolean {
   return !!(
     adviser.contactInfo?.wechat?.trim() ||
     adviser.contactInfo?.email?.trim() ||
@@ -129,7 +133,7 @@ export function hasAdviserContactInfo(adviser: Adviser): boolean {
   )
 }
 
-export function hasAdviserMeetingLinks(adviser: Adviser): boolean {
+export function hasAdviserMeetingLinks(adviser: AdviserReadinessFields): boolean {
   return !!(
     adviser.meetingLinks?.zoom?.trim() ||
     adviser.meetingLinks?.tencent?.trim() ||
@@ -137,7 +141,7 @@ export function hasAdviserMeetingLinks(adviser: Adviser): boolean {
   )
 }
 
-export function hasAdviserPayoutInfo(adviser: Adviser): boolean {
+export function hasAdviserPayoutInfo(adviser: AdviserReadinessFields): boolean {
   return !!(
     adviser.payoutInfo?.wechat?.trim() ||
     adviser.payoutInfo?.alipay?.trim() ||
@@ -147,11 +151,11 @@ export function hasAdviserPayoutInfo(adviser: Adviser): boolean {
   )
 }
 
-export function isAdviserBookingReady(adviser: Adviser): boolean {
+export function isAdviserBookingReady(adviser: AdviserReadinessFields): boolean {
   return hasAdviserContactInfo(adviser) && hasAdviserMeetingLinks(adviser) && hasAdviserPayoutInfo(adviser)
 }
 
-export function isAdviserIdentityVerified(adviser: Adviser): boolean {
+export function isAdviserIdentityVerified(adviser: AdviserIdentityFields): boolean {
   const isEduEmail = adviser.email.trim().toLowerCase().endsWith('.edu')
   return (isEduEmail && adviser.emailVerified) || adviser.diplomaStatus === 'verified'
 }
@@ -207,6 +211,7 @@ function initStore(): Map<string, Adviser> {
       role: 'adviser',
       emailVerified: true,
       diplomaStatus: 'none',
+      createdAt: new Date().toISOString(),
     },
     {
       id: 'adv-2',
@@ -233,6 +238,7 @@ function initStore(): Map<string, Adviser> {
       role: 'adviser',
       emailVerified: true,
       diplomaStatus: 'none',
+      createdAt: new Date().toISOString(),
     },
     {
       id: 'adv-3',
@@ -258,6 +264,7 @@ function initStore(): Map<string, Adviser> {
       role: 'adviser',
       emailVerified: true,
       diplomaStatus: 'none',
+      createdAt: new Date().toISOString(),
     },
     {
       id: 'adv-4',
@@ -283,6 +290,7 @@ function initStore(): Map<string, Adviser> {
       role: 'adviser',
       emailVerified: true,
       diplomaStatus: 'none',
+      createdAt: new Date().toISOString(),
     },
     {
       id: 'adv-5',
@@ -310,6 +318,7 @@ function initStore(): Map<string, Adviser> {
       role: 'adviser',
       emailVerified: true,
       diplomaStatus: 'none',
+      createdAt: new Date().toISOString(),
     },
     {
       id: 'adv-6',
@@ -336,6 +345,7 @@ function initStore(): Map<string, Adviser> {
       role: 'adviser',
       emailVerified: true,
       diplomaStatus: 'none',
+      createdAt: new Date().toISOString(),
     },
   ]
   for (const a of seeds) store.set(a.id, a)
@@ -359,6 +369,18 @@ export function getAdviserById(id: string): Adviser | undefined {
 
 export function getAllAdvisers(): PublicAdviser[] {
   return Array.from(advisers.values()).map(toPublic)
+}
+
+export type AdminAdviserRecord = Omit<Adviser, 'password'>
+
+export function getAllAdviserRecords(): AdminAdviserRecord[] {
+  return Array.from(advisers.values())
+    .map(adviser => {
+      const rest = { ...adviser }
+      delete (rest as Partial<Adviser>).password
+      return rest
+    })
+    .sort((a, b) => (b.createdAt ?? b.updatedAt ?? '').localeCompare(a.createdAt ?? a.updatedAt ?? ''))
 }
 
 export function searchAdvisers(filter: {
@@ -405,6 +427,7 @@ export async function createAdviser(data: {
     chatPrice: 200, timezone: 'America/New_York',
     password: await bcrypt.hash(data.password, 10),
     role: 'adviser',
+    createdAt: new Date().toISOString(),
   }
   advisers.set(adviser.id, adviser)
   saveMap(FILE, advisers).catch(() => {})

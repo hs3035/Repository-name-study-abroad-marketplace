@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { getLocale } from '@/app/lib/locale'
 import { isAdminSession } from '@/app/lib/payment-mode'
 import { getSession } from '@/app/lib/session'
+import AdminAdvisersPanel from './AdminAdvisersPanel'
 import AdminOrdersPanel from './AdminOrdersPanel'
 import AdminStudentsPanel from './AdminStudentsPanel'
 
@@ -35,9 +36,9 @@ export default async function AdminPage() {
       <div className="mx-auto max-w-5xl px-4 py-8 space-y-6">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold">{zh ? '平台订单管理' : 'Platform order admin'}</h1>
+            <h1 className="text-2xl font-bold">{zh ? '平台管理后台' : 'Platform admin'}</h1>
             <p className="text-sm text-gray-500 mt-1">
-              {zh ? '用于人工确认微信/支付宝/银行转账付款和人工结算。' : 'Confirm manual payments and manual payouts.'}
+              {zh ? '查看订单、学生和导师数据，并处理人工付款与结算。' : 'View orders, students, mentors, and handle manual payments and payouts.'}
             </p>
           </div>
           <Link href="/" className="rounded-xl border bg-white px-4 py-2 text-sm hover:bg-gray-50">
@@ -47,6 +48,7 @@ export default async function AdminPage() {
 
         <AdminOrdersPanel locale={locale} />
         <AdminStudentsPanel locale={locale} />
+        <AdminAdvisersPanel locale={locale} />
       </div>
     </main>
   )
