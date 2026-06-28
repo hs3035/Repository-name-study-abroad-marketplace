@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getAdviserById, isAdviserIdentityVerified, SERVICE_CATALOG } from '@/app/lib/advisers'
 import { getMentorPublicReviews, getMentorReviewSummary } from '@/app/lib/reviews'
@@ -20,6 +21,36 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       {children}
     </section>
   )
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}): Promise<Metadata> {
+  const { id } = await params
+  const adviser = getAdviserById(id)
+  if (!adviser) {
+    return {
+      title: '导师主页',
+    }
+  }
+
+  const description = `${adviser.name}，${adviser.school} ${adviser.major} 导师，提供留学申请咨询、文书修改和面试辅导。`
+
+  return {
+    title: `${adviser.name}｜${adviser.school} ${adviser.major} 导师`,
+    description,
+    alternates: {
+      canonical: `/advisers/${adviser.id}`,
+    },
+    openGraph: {
+      title: `${adviser.name}｜GoMentorGo 导师`,
+      description,
+      url: `/advisers/${adviser.id}`,
+      type: 'profile',
+    },
+  }
 }
 
 export default async function AdviserPublicProfile({
