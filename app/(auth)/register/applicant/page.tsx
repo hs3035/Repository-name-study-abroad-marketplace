@@ -2,11 +2,10 @@
 
 import { useActionState, useState, useTransition } from 'react'
 import Link from 'next/link'
-import { registerApplicant, sendPhoneVerification, sendApplicantEmailVerification } from '@/app/actions/auth'
+import { registerApplicant, sendApplicantEmailVerification } from '@/app/actions/auth'
 import { useLanguage } from '@/app/context/language-context'
 
 const STORAGE_KEY = 'applicant-draft'
-const PHONE_RE = /^1[3-9]\d{9}$/
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 type Level = 'undergraduate' | 'master' | 'phd' | ''
@@ -28,9 +27,6 @@ export default function ApplicantRegisterPage() {
       return EMPTY
     }
   })
-  const [smsCode, setSmsCode] = useState('')
-  const [smsSent, setSmsSent] = useState(false)
-  const [smsError, setSmsError] = useState('')
   const [emailCode, setEmailCode] = useState('')
   const [emailSent, setEmailSent] = useState(false)
   const [emailError, setEmailError] = useState('')
@@ -42,9 +38,6 @@ export default function ApplicantRegisterPage() {
       const next = { ...draft, [field]: ev.target.value }
       setDraft(next)
       if (field === 'credential') {
-        setSmsSent(false)
-        setSmsError('')
-        setSmsCode('')
         setEmailSent(false)
         setEmailError('')
         setEmailCode('')
@@ -60,21 +53,7 @@ export default function ApplicantRegisterPage() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)) } catch {}
   }
 
-  const isPhone = PHONE_RE.test(draft.credential)
-  const isEmail = EMAIL_RE.test(draft.credential) && !isPhone
-
-  function handleSendSms() {
-    setSmsError('')
-    startSending(async () => {
-      const res = await sendPhoneVerification(draft.credential)
-      if (res.sent) {
-        setSmsSent(true)
-        if (res.devCode) setDevCode(res.devCode)
-      } else {
-        setSmsError(res.error ?? (locale === 'zh' ? '发送失败，请稍后重试' : 'Failed to send, please try again'))
-      }
-    })
-  }
+  const isEmail = EMAIL_RE.test(draft.credential)
 
   function handleSendEmailCode() {
     setEmailError('')
@@ -114,43 +93,16 @@ export default function ApplicantRegisterPage() {
             {e.name && <p className="mt-1 text-xs text-red-500">{e.name[0]}</p>}
           </div>
 
-          {/* Credential + phone OTP */}
+          {/* Email + verification */}
           <div className="space-y-2">
             <div>
               <label className="block text-sm font-medium mb-1.5">{t.credential}</label>
-              <input name="credential" type="text" placeholder={t.credentialPh}
+              <input name="credential" type="email" placeholder={t.credentialPh}
                 autoComplete="username"
                 value={draft.credential} onChange={update('credential')}
                 className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black transition" />
               {e.credential && <p className="mt-1 text-xs text-red-500">{e.credential[0]}</p>}
             </div>
-
-            {isPhone && (
-              <div className="rounded-xl border bg-blue-50/60 p-4 space-y-3">
-                <p className="text-xs text-blue-700 font-medium">{t.phoneVerify}</p>
-                <div className="flex gap-2">
-                  <input name="smsCode" type="text" inputMode="numeric" maxLength={6}
-                    placeholder={t.smsPh} value={smsCode}
-                    onChange={ev => setSmsCode(ev.target.value)}
-                    className="flex-1 rounded-xl border px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-black transition" />
-                  <button type="button" onClick={handleSendSms} disabled={isSending}
-                    className="whitespace-nowrap rounded-xl bg-black px-4 py-2 text-sm text-white disabled:opacity-50 transition">
-                    {isSending ? t.smsSending : smsSent ? t.resendSms : t.sendSms}
-                  </button>
-                </div>
-                {smsSent && !smsError && (
-                  <p className="text-xs text-green-600">{t.smsSent}</p>
-                )}
-                {devCode && (
-                  <div className="rounded-lg bg-yellow-50 border border-yellow-200 px-3 py-2 flex items-center gap-2">
-                    <span className="text-xs text-yellow-700">🛠 Dev:</span>
-                    <span className="font-mono font-bold text-yellow-900 tracking-widest">{devCode}</span>
-                  </div>
-                )}
-                {smsError && <p className="text-xs text-red-500">{smsError}</p>}
-                {e.smsCode && <p className="text-xs text-red-500">{e.smsCode[0]}</p>}
-              </div>
-            )}
 
             {isEmail && (
               <div className="rounded-xl border bg-blue-50/60 p-4 space-y-3">
