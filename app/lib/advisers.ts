@@ -71,6 +71,8 @@ export const LANGUAGE_OPTIONS = [
 
 export type Adviser = {
   id: string
+  /** Login account: email, Chinese mobile number, or WeChat ID. */
+  loginCredential?: string
   email: string
   password: string
   name: string
@@ -360,7 +362,10 @@ const advisers: Map<string, Adviser> =
 if (!loaded.size) saveMap(FILE, advisers).catch(() => {})
 
 export function getAdviserByEmail(email: string): Adviser | undefined {
-  return Array.from(advisers.values()).find(a => a.email === email)
+  const normalized = email.trim().toLowerCase()
+  return Array.from(advisers.values()).find(a =>
+    (a.loginCredential ?? a.email).trim().toLowerCase() === normalized,
+  )
 }
 
 export function getAdviserById(id: string): Adviser | undefined {
@@ -403,6 +408,7 @@ export function searchAdvisers(filter: {
 }
 
 export async function createAdviser(data: {
+  loginCredential: string
   email: string
   password: string
   name: string
@@ -417,7 +423,7 @@ export async function createAdviser(data: {
   diplomaStatus: DiplomaStatus
   diplomaPath?: string
 }): Promise<Adviser | null> {
-  if (getAdviserByEmail(data.email)) return null
+  if (getAdviserByEmail(data.loginCredential)) return null
   const adviser: Adviser = {
     id: crypto.randomUUID(),
     ...data,
