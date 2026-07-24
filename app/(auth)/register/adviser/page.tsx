@@ -2,7 +2,7 @@
 
 import { useActionState, useState, useTransition } from 'react'
 import Link from 'next/link'
-import { registerAdviser, sendVerificationEmail } from '@/app/actions/auth'
+import { registerAdviser, sendApplicantEmailVerification } from '@/app/actions/auth'
 import { useLanguage } from '@/app/context/language-context'
 import { COUNTRY_OPTIONS } from '@/app/lib/i18n'
 
@@ -10,12 +10,12 @@ const CURRENT_YEAR = new Date().getFullYear()
 const STORAGE_KEY = 'adviser-draft'
 
 type Draft = {
-  name: string; email: string; school: string; major: string
+  name: string; credential: string; school: string; major: string
   country: string; region: string; phdStartYear: string
   educationBackground: string; bio: string
 }
 const EMPTY: Draft = {
-  name: '', email: '', school: '', major: '',
+  name: '', credential: '', school: '', major: '',
   country: '', region: '', phdStartYear: '',
   educationBackground: '', bio: '',
 }
@@ -44,44 +44,48 @@ export default function AdviserRegisterPage() {
     if (typeof window === 'undefined') return EMPTY
     try {
       const saved = localStorage.getItem(STORAGE_KEY)
-      return saved ? { ...EMPTY, ...JSON.parse(saved) } : EMPTY
+      if (!saved) return EMPTY
+      const parsed = JSON.parse(saved)
+      return {
+        ...EMPTY,
+        ...parsed,
+        credential: parsed.credential ?? parsed.email ?? '',
+      }
     } catch {
       return EMPTY
     }
   })
-  const [otpCode, setOtpCode] = useState('')
-  const [otpSent, setOtpSent] = useState(false)
-  const [sendError, setSendError] = useState('')
+  const [emailCode, setEmailCode] = useState('')
+  const [emailSent, setEmailSent] = useState(false)
+  const [emailError, setEmailError] = useState('')
   const [devCode, setDevCode] = useState('')
-  const [diplomaFile, setDiplomaFile] = useState<File | null>(null)
   const [isSending, startSending] = useTransition()
 
   function update(field: keyof Draft) {
     return (ev: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
       const next = { ...draft, [field]: ev.target.value }
       setDraft(next)
-      if (field === 'email') {
-        setOtpSent(false)
-        setSendError('')
-        setOtpCode('')
+      if (field === 'credential') {
+        setEmailSent(false)
+        setEmailError('')
+        setEmailCode('')
         setDevCode('')
       }
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)) } catch {}
     }
   }
 
-  const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.email)
-  const isEdu = draft.email.toLowerCase().includes('.edu')
+  const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.credential)
 
-  function handleSendCode() {
-    setSendError('')
+  function handleSendEmailCode() {
+    setEmailError('')
     startSending(async () => {
-      const res = await sendVerificationEmail(draft.email)
+      const res = await sendApplicantEmailVerification(draft.credential)
       if (res.sent) {
-        setOtpSent(true)
+        setEmailSent(true)
         if (res.devCode) setDevCode(res.devCode)
       } else {
-        setSendError(res.error ?? (locale === 'zh' ? '发送失败，请稍后重试' : 'Failed to send, please try again'))
+        setEmailError(res.error ?? (locale === 'zh' ? '发送失败，请稍后重试' : 'Failed to send, please try again'))
       }
     })
   }
@@ -102,75 +106,38 @@ export default function AdviserRegisterPage() {
               className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black transition" />
           </Field>
 
-          {/* Email + verification */}
-          <div className="space-y-2">
-            <Field label={t.email} error={e.email?.[0]}>
-              <input name="email" type="email" placeholder={t.emailPh}
-                autoComplete="username"
-                value={draft.email} onChange={update('email')}
-                className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black transition" />
-            </Field>
+          <Field label={t.credential} error={e.credential?.[0]}>
+            <input name="credential" type="email" placeholder={t.credentialPh}
+              autoComplete="username"
+              value={draft.credential} onChange={update('credential')}
+              className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-black transition" />
+          </Field>
 
-            {isValidEmail && isEdu && (
-              <div className="rounded-xl border bg-blue-50/60 p-4 space-y-3">
-                <p className="text-xs text-blue-700 font-medium">{t.eduNote}</p>
-                <div className="flex gap-2">
-                  <input name="otpCode" type="text" inputMode="numeric" maxLength={6}
-                    placeholder={t.otpPh} value={otpCode}
-                    onChange={ev => setOtpCode(ev.target.value)}
-                    className="flex-1 rounded-xl border px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-black transition" />
-                  <button type="button" onClick={handleSendCode} disabled={isSending}
-                    className="whitespace-nowrap rounded-xl bg-black px-4 py-2 text-sm text-white disabled:opacity-50 transition">
-                    {isSending ? t.sending : otpSent ? t.resendCode : t.sendCode}
-                  </button>
+          {isValidEmail && (
+            <div className="rounded-xl border bg-blue-50/60 p-4 space-y-3">
+              <p className="text-xs text-blue-700 font-medium">{t.emailVerify}</p>
+              <div className="flex gap-2">
+                <input name="emailCode" type="text" inputMode="numeric" maxLength={6}
+                  placeholder={t.otpPh} value={emailCode}
+                  onChange={ev => setEmailCode(ev.target.value)}
+                  className="flex-1 rounded-xl border px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-black transition" />
+                <button type="button" onClick={handleSendEmailCode} disabled={isSending}
+                  className="whitespace-nowrap rounded-xl bg-black px-4 py-2 text-sm text-white disabled:opacity-50 transition">
+                  {isSending ? t.sending : emailSent ? t.resendCode : t.sendCode}
+                </button>
+              </div>
+              {emailSent && !emailError && <p className="text-xs text-green-600">{t.codeSent}</p>}
+              {emailSent && <p className="text-xs text-gray-400">{t.emailSpamHint}</p>}
+              {devCode && (
+                <div className="rounded-lg bg-yellow-50 border border-yellow-200 px-3 py-2 flex items-center gap-2">
+                  <span className="text-xs text-yellow-700">🛠 Dev:</span>
+                  <span className="font-mono font-bold text-yellow-900 tracking-widest">{devCode}</span>
                 </div>
-                {otpSent && !sendError && (
-                  <p className="text-xs text-green-600">{t.codeSent}</p>
-                )}
-                {otpSent && (
-                  <p className="text-xs text-gray-400">{t.emailSpamHint}</p>
-                )}
-                {devCode && (
-                  <div className="rounded-lg bg-yellow-50 border border-yellow-200 px-3 py-2 flex items-center gap-2">
-                    <span className="text-xs text-yellow-700">🛠 Dev:</span>
-                    <span className="font-mono font-bold text-yellow-900 tracking-widest">{devCode}</span>
-                  </div>
-                )}
-                {sendError && <p className="text-xs text-red-500">{sendError}</p>}
-                {e.otpCode && <p className="text-xs text-red-500">{e.otpCode[0]}</p>}
-              </div>
-            )}
-
-            {isValidEmail && !isEdu && (
-              <div className="rounded-xl border bg-amber-50/60 p-4 space-y-3">
-                <p className="text-xs text-amber-700 font-medium">{t.diplomaNote}</p>
-                <label className="block">
-                  <div className={`flex items-center gap-3 rounded-xl border-2 border-dashed px-4 py-3 cursor-pointer transition
-                    ${diplomaFile ? 'border-black bg-gray-50' : 'border-gray-300 hover:border-gray-400'}`}>
-                    <span className="text-lg">{diplomaFile ? '📄' : '📎'}</span>
-                    <div className="flex-1 min-w-0">
-                      {diplomaFile
-                        ? <p className="text-sm font-medium truncate">{diplomaFile.name}</p>
-                        : <p className="text-sm text-gray-500">{t.uploadPh}</p>
-                      }
-                    </div>
-                    {diplomaFile && (
-                      <button type="button"
-                        onClick={ev => { ev.preventDefault(); setDiplomaFile(null) }}
-                        className="text-xs text-gray-400 hover:text-red-500">
-                        {d.common.delete}
-                      </button>
-                    )}
-                  </div>
-                  <input type="file" name="diploma" accept=".pdf,.jpg,.jpeg,.png,.webp"
-                    className="sr-only"
-                    onChange={ev => setDiplomaFile(ev.target.files?.[0] ?? null)} />
-                </label>
-                <p className="text-xs text-amber-600">{t.pendingNote}</p>
-                {e.diploma && <p className="text-xs text-red-500">{e.diploma[0]}</p>}
-              </div>
-            )}
-          </div>
+              )}
+              {emailError && <p className="text-xs text-red-500">{emailError}</p>}
+              {e.emailCode && <p className="text-xs text-red-500">{e.emailCode[0]}</p>}
+            </div>
+          )}
 
           <Field label={t.password} error={e.password?.[0]}>
             <input name="password" type="password" placeholder={t.passwordPh}
