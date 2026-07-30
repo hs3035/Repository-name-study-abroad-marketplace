@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next'
 import { getAllAdvisers } from '@/app/lib/advisers'
+import { PUBLIC_ACADEMICS } from '@/app/lib/public-academics'
 
 const siteUrl = process.env.NEXT_PUBLIC_URL || 'https://gomentorgo.com'
 
@@ -48,6 +49,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'yearly',
       priority: 0.3,
     },
+    {
+      url: `${siteUrl}/academics`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
   ]
 
   const adviserRoutes: MetadataRoute.Sitemap = getAllAdvisers().map(adviser => ({
@@ -57,5 +64,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: adviser.bookingReady ? 0.8 : 0.5,
   }))
 
-  return [...publicRoutes, ...adviserRoutes]
+  const academicRoutes: MetadataRoute.Sitemap = PUBLIC_ACADEMICS.map(person => ({
+    url: `${siteUrl}/academics/${person.slug}`,
+    lastModified: new Date(person.checkedAt),
+    changeFrequency: 'monthly',
+    priority: 0.6,
+  }))
+
+  return [...publicRoutes, ...adviserRoutes, ...academicRoutes]
 }
