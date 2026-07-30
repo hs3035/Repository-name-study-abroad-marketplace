@@ -10,7 +10,7 @@ export default function PrivacyPage() {
         <div>
           <Link href="/" className="text-sm text-gray-400 hover:text-black transition">← 返回首页</Link>
           <h1 className="text-2xl font-bold mt-4">隐私政策</h1>
-          <p className="text-sm text-gray-400 mt-1">最后更新：2025年1月1日</p>
+          <p className="text-sm text-gray-400 mt-1">最后更新：2026年7月30日</p>
         </div>
 
         {[
@@ -25,6 +25,10 @@ export default function PrivacyPage() {
           {
             title: '3. 信息共享',
             body: '我们不出售用户个人信息。以下情况除外：（1）Stripe 支付处理——学生支付信息由 Stripe 处理，受 Stripe 隐私政策约束；（2）法律要求——依法律程序披露；（3）用户授权——用户主动公开的档案信息对其他用户可见。',
+          },
+          {
+            title: '3A. 公开学术联系人目录',
+            body: '平台可能整理大学官方网站已经公开的专业信息，包括姓名、学术身份、学校邮箱、研究方向及原始来源链接。这些页面不是当事人注册的平台账户，也不代表当事人认可平台或提供咨询服务。我们不在该目录收录私人电话号码。本人可以通过“联系我们”要求认领、更正或删除资料。',
           },
           {
             title: '4. 信息存储与安全',
