@@ -53,7 +53,7 @@ export default async function HomePage() {
         <p className="mb-8 text-lg text-gray-600">{d.home.subtitle}</p>
         <p className="mb-4 max-w-2xl text-sm text-gray-500">{d.home.roleHint}</p>
 
-        <div className="flex gap-4">
+        <div className="flex flex-wrap gap-4">
           {session?.role === 'applicant' ? (
             <Link href="/dashboard/applicant"
               className="rounded-xl bg-black px-6 py-3 text-white text-sm font-medium hover:bg-gray-800 transition">
@@ -76,6 +76,12 @@ export default async function HomePage() {
               {d.home.becomeMentor}
             </Link>
           )}
+          <Link
+            href="/academics"
+            className="rounded-xl border border-gray-300 bg-white px-6 py-3 text-sm font-medium hover:bg-gray-100 transition"
+          >
+            {locale === 'zh' ? '查找美国博士生与博士后' : 'Find US PhD students & postdocs'}
+          </Link>
         </div>
       </div>
 
@@ -85,6 +91,7 @@ export default async function HomePage() {
           <Link href="/terms"   className="hover:text-black transition">{locale === 'zh' ? '服务条款' : 'Terms'}</Link>
           <Link href="/privacy" className="hover:text-black transition">{locale === 'zh' ? '隐私政策' : 'Privacy'}</Link>
           <Link href="/contact" className="hover:text-black transition">{locale === 'zh' ? '联系我们' : 'Contact'}</Link>
+          <Link href="/academics" className="hover:text-black transition">{locale === 'zh' ? '学术联系人' : 'Academic contacts'}</Link>
         </div>
       </footer>
     </div>
