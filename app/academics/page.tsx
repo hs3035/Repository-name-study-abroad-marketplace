@@ -11,6 +11,23 @@ export const metadata: Metadata = {
 
 export default async function AcademicsPage() {
   const zh = (await getLocale()) === 'zh'
+  const fieldGroups = [
+    {
+      key: 'Speech & Language' as const,
+      zh: '言语、语言与认知科学',
+      en: 'Speech, Language & Cognitive Science',
+    },
+    {
+      key: 'Art & Visual Culture' as const,
+      zh: '艺术史与视觉文化',
+      en: 'Art History & Visual Culture',
+    },
+    {
+      key: 'Bioengineering & Biomedical Engineering' as const,
+      zh: '生物工程与生物医学工程',
+      en: 'Bioengineering & Biomedical Engineering',
+    },
+  ]
 
   return (
     <main className="min-h-screen bg-gray-50 px-5 py-8">
@@ -41,9 +58,18 @@ export default async function AcademicsPage() {
             : 'Read the official profile before contacting anyone. Send a personalized, research-relevant message; do not mass-email or assume free advising.'}
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          {PUBLIC_ACADEMICS.map(person => (
-            <article key={person.slug} className="flex flex-col rounded-2xl border bg-white p-5">
+        <div className="space-y-10">
+          {fieldGroups.map(group => {
+            const people = PUBLIC_ACADEMICS.filter(person => person.field === group.key)
+            return (
+              <section key={group.key}>
+                <div className="mb-4 flex items-center justify-between gap-4 border-b pb-3">
+                  <h2 className="text-xl font-bold">{zh ? group.zh : group.en}</h2>
+                  <span className="text-xs text-gray-500">{people.length} {zh ? '位联系人' : 'contacts'}</span>
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  {people.map(person => (
+                    <article key={person.slug} className="flex flex-col rounded-2xl border bg-white p-5">
               <div className="mb-3 flex items-start justify-between gap-3">
                 <div>
                   <h2 className="text-lg font-semibold">{person.name}</h2>
@@ -77,8 +103,12 @@ export default async function AcademicsPage() {
                   {zh ? '官方来源 ↗' : 'Source ↗'}
                 </a>
               </div>
-            </article>
-          ))}
+                    </article>
+                  ))}
+                </div>
+              </section>
+            )
+          })}
         </div>
 
         <footer className="mt-10 border-t pt-6 text-xs leading-5 text-gray-500">
@@ -92,4 +122,3 @@ export default async function AcademicsPage() {
     </main>
   )
 }
-
