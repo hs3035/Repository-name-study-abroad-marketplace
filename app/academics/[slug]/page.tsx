@@ -23,13 +23,13 @@ export async function generateMetadata({
   }
 }
 
-function emailHref(name: string, email: string, zh: boolean) {
+function emailHref(name: string, email: string, institution: string, zh: boolean) {
   const subject = zh
-    ? `关于您在 NYU 的研究——来自一位研究生申请者`
-    : `Question about your research at NYU from a prospective graduate student`
+    ? `关于您在 ${institution} 的研究——来自一位研究生申请者`
+    : `Question about your research at ${institution} from a prospective graduate student`
   const body = zh
-    ? `您好 ${name}，\n\n我在纽约大学官网和 GoMentorGo 的公开学术联系人目录中了解到您的研究。\n\n[请在这里用 2–3 句话介绍你的背景、与对方研究的具体关联，以及一个清晰的问题。]\n\n感谢您抽出时间阅读。若不方便回复也完全理解。\n\n祝好，\n[你的姓名]`
-    : `Hi ${name},\n\nI found your research through the NYU website and GoMentorGo's public academic directory.\n\n[In 2–3 sentences, introduce your background, explain the specific research connection, and ask one clear question.]\n\nThank you for your time. I completely understand if you are unable to respond.\n\nBest,\n[Your name]`
+    ? `您好 ${name}，\n\n我在 ${institution} 官网和 GoMentorGo 的公开学术联系人目录中了解到您的研究。\n\n[请在这里用 2–3 句话介绍你的背景、与对方研究的具体关联，以及一个清晰的问题。]\n\n感谢您抽出时间阅读。若不方便回复也完全理解。\n\n祝好，\n[你的姓名]`
+    : `Hi ${name},\n\nI found your research through the ${institution} website and GoMentorGo's public academic directory.\n\n[In 2–3 sentences, introduce your background, explain the specific research connection, and ask one clear question.]\n\nThank you for your time. I completely understand if you are unable to respond.\n\nBest,\n[Your name]`
 
   return `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
 }
@@ -87,7 +87,7 @@ export default async function AcademicProfilePage({
           </p>
           <p className="mt-4 break-all rounded-xl bg-gray-50 px-4 py-3 font-mono text-sm">{person.email}</p>
           <a
-            href={emailHref(person.name, person.email, zh)}
+            href={emailHref(person.name, person.email, person.institution, zh)}
             className="mt-4 inline-flex rounded-xl bg-black px-5 py-3 text-sm font-medium text-white hover:bg-gray-800"
           >
             {zh ? '写一封个性化邮件' : 'Write a personalized email'}
@@ -124,4 +124,3 @@ export default async function AcademicProfilePage({
     </main>
   )
 }
-
