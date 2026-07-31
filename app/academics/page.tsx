@@ -27,6 +27,11 @@ export default async function AcademicsPage() {
       zh: '生物工程与生物医学工程',
       en: 'Bioengineering & Biomedical Engineering',
     },
+    {
+      key: 'Computer Science' as const,
+      zh: '计算机科学',
+      en: 'Computer Science',
+    },
   ]
 
   return (
